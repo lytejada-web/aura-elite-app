@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Aura Elite</title> 
+    <link rel="stylesheet" href="assets/css/styles.css"> 
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <aside id="sidebar">
+            <div class="logo-dashboard">
+                <a href="dashboard.html">
+                <h1 id="app-name-sidebar">Cargando...</h1>
+                </a>
+            </div>
+            
+            <nav class="main-menu">
+                <ul>
+                    <li><a href="dashboard.html" class="active">🏠 Inicio</a></li>
+                    <li><a href="calendario.html">📅 Calendario</a></li>
+                    <li><a href="clientes.html">👤 Clientes</a></li>
+                    <li><a href="facturas.html">💵 Facturación</a></li>
+                    <li><a href="ficheros.html">☁️ Ficheros (Drive)</a></li>
+                </ul>
+            </nav>
+            
+            <div class="user-info">
+                <p>Prof(a). <span id="user-display-name">Cargando...</span></p>
+                <a href="#" onclick="logout()">Cerrar Sesión</a>
+            </div>
+        </aside>
+
+        <section id="main-content">
+            
+            <header id="topbar">
+                <h2>Vista Actual: [Nombre del Módulo]</h2>
+                <button class="btn-primary">➕ Nueva Cita</button>
+            </header>
+            
+            <div class="content-area">
+                <h1>Contenido del Módulo</h1>
+                <p>Este es el área donde se cargará la funcionalidad de cada sección.</p>
+            </div>
+            
+        </section>
+        
+    </div>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/config.js"></script>
+        <script src="assets/js/app.js"></script>
+    <script src="assets/js/brandConfig.js"></script>
+
+    <script>
+    // Script pequeño para "pintar" la marca al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+        // 1. Cambiar Nombre en el Sidebar
+            const sidebarTitle = document.getElementById('app-name-sidebar');
+            if(sidebarTitle) sidebarTitle.innerText = APP_CONFIG.appName;
+
+        // 2. Cambiar Título de la pestaña del navegador
+            document.title = `${APP_CONFIG.appName} | ${APP_CONFIG.appTagline}`;
+
+        // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
+        // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
+        // Pero de momento, con el nombre ya se ve el cambio de marca.
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes | Aura Elite</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-container">
+        <aside id="sidebar">
+            <div class="logo-dashboard">
+                <a href="dashboard.html">
+                <h1 id="app-name-sidebar">Cargando...</h1>
+                </a>
+            </div>
+            <nav class="main-menu">
+                <ul>
+                    <li><a href="dashboard.html">🏠 Inicio</a></li>
+                    <li><a href="calendario.html">📅 Calendario</a></li>
+                    <li><a href="clientes.html" class="active">👤 Clientes</a></li>
+                    <li><a href="facturas.html">💵 Facturación</a></li>
+                    <li><a href="ficheros.html">☁️ Ficheros (Drive)</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <p>Prof(a). <span id="user-display-name">Cargando...</span></p>
+                <a href="#" onclick="logout()">Cerrar Sesión</a>
+            </div>
+        </aside>
+        <section id="main-content">
+            <header id="topbar">
+                <h2>Módulo de Clientes</h2>
+                <button id="btn-new-patient" class="btn-primary">➕ Nuevo Cliente</button>
+            </header>
+
+            <div class="content-area">
+                <div class="toolbar">
+                    <div class="search-bar">
+                        <input type="text" id="search-input" placeholder="Buscar por nombre o teléfono...">
+                        <button id="btn-search" class="btn-search">🔍</button>
+                    </div>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>NOMBRE COMPLETO</th>
+                            <th>TELÉFONO (WHATSAPP)</th>
+                            <th>ÚLTIMA CITA</th>
+                            <th>HISTORIAL</th>
+                            <th>ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patients-table-body">
+                        </tbody>
+                </table>
+                <p id="no-results" style="display:none; text-align:center; padding: 20px; color: #7f8c8d;">No se encontraron clientes con ese nombre.</p>
+            </div>
+        </section>
+    </div>
+
+    <div id="new-patient-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-button">&times;</span>
+            <h2 style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">👤 Registrar Nuevo Cliente</h2>
+            <form id="patient-form">
+                <div class="form-group">
+                    <label style="font-weight: bold;">Nombre Completo:</label>
+                    <input type="text" id="patient-name" required placeholder="Ej: Juan Pérez" style="width: 100%; padding: 10px;">
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: bold;">Teléfono:</label>
+                    <input type="text" id="patient-phone" placeholder="Ej: 04141234567" style="width: 100%; padding: 10px;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 25px; width: 100%;">💾 Guardar Cliente</button>
+            </form>
+        </div>
+    </div>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/moment.min.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/brandConfig.js"></script>
+
+    <script>
+    // Script pequeño para "pintar" la marca al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+        // 1. Cambiar Nombre en el Sidebar
+            const sidebarTitle = document.getElementById('app-name-sidebar');
+            if(sidebarTitle) sidebarTitle.innerText = APP_CONFIG.appName;
+
+        // 2. Cambiar Título de la pestaña del navegador
+            document.title = `${APP_CONFIG.appName} | ${APP_CONFIG.appTagline}`;
+
+        // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
+        // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
+        // Pero de momento, con el nombre ya se ve el cambio de marca.
+        });
+    </script>
+</body>
+</html>

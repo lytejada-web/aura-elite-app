@@ -1,0 +1,1225 @@
+// ===============================================
+// 1. VARIABLES SASS: PALETA DE COLORES Y FUENTES
+// ===============================================
+
+$color-primary: #154360; // Azul Marino (Confianza, Autoridad)
+$color-secondary: #EBF5FB; // Azul muy claro (Limpieza, Fondo sutil)
+$color-accent: #2ECC71; // Verde Menta (Salud, Frescura)
+$color-cta: #FF6347; // Naranja Coral/Tomate (Llamada a la Acción, Energía)
+$color-text: #333333; // Texto oscuro
+$color-light: #FFFFFF; // Blanco puro
+
+$font-principal: 'Arial', sans-serif;
+$max-width: 1200px;
+$spacing-l: 40px;
+$spacing-m: 20px;
+
+// ===============================================
+// 2. REINICIO BÁSICO Y ESTILOS GLOBALES
+// ===============================================
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: $font-principal;
+    line-height: 1.6;
+    color: $color-text;
+    background-color: $color-light;
+}
+
+// Estilo base para todos los botones
+@mixin button-base($bg-color, $text-color) {
+    display: inline-block;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    background-color: $bg-color;
+    color: $text-color;
+
+    &:hover {
+        background-color: darken($bg-color, 10%); // Oscurece al pasar el ratón
+    }
+
+    &:active {
+        transform: translateY(1px);
+    }
+}
+
+// Contenedor principal para centrar el contenido
+main, header {
+    max-width: $max-width;
+    margin: 0 auto;
+    padding: 0 $spacing-m;
+}
+
+// ===============================================
+// 3. CABECERA Y NAVEGACIÓN
+// ===============================================
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-m 0;
+    border-bottom: 1px solid $color-secondary;
+    background-color: $color-light;
+
+    .logo {
+        a {
+            text-decoration: none; // Eliminamos el subrayado del enlace
+            h1 {
+                color: $color-primary;
+                font-size: 1.8rem;
+                // El h1 mantiene el color de la marca
+            }
+        }
+    }
+    nav ul {
+        list-style: none;
+        display: flex;
+
+        li {
+            margin-left: $spacing-m;
+
+            a {
+                text-decoration: none;
+                color: $color-text;
+                font-weight: 500;
+
+                &:hover {
+                    color: $color-cta;
+                }
+            }
+        }
+    }
+
+    .btn-registro {
+        @include button-base($color-primary, $color-light);
+    }
+}
+
+// ===============================================
+// 4. SECCIÓN HERO (IMPACTO)
+// ===============================================
+
+.hero-section {
+    padding: $spacing-l * 2 0;
+    text-align: center;
+    background-color: $color-secondary; // Fondo sutil para destacar
+
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+
+        h2 {
+            font-size: 2.8rem;
+            color: $color-primary;
+            margin-bottom: $spacing-m / 2;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: $spacing-m * 1.5;
+        }
+        
+        // Placeholder de la imagen
+        .hero-image-placeholder {
+            height: 350px; // Altura para la foto de las modelos
+            background-color: $color-light;
+            border: 1px solid darken($color-secondary, 5%);
+            margin-bottom: $spacing-m * 1.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: $color-primary;
+            font-style: italic;
+        }
+
+        .btn-cta {
+            @include button-base($color-cta, $color-light);
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            
+            &:hover {
+                background-color: darken($color-cta, 10%);
+            }
+        }
+
+        .small-text {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 10px;
+        }
+    }
+}
+
+// ===============================================
+// 5. SECCIÓN DE PLANES (EL CORAZÓN)
+// ===============================================
+
+.plans-section {
+    padding: $spacing-l * 1.5 0;
+    text-align: center;
+    background-color: $color-light;
+
+    h3 {
+        font-size: 2rem;
+        margin-bottom: $spacing-l;
+        color: $color-primary;
+    }
+
+    .plans-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr; // Dos columnas para Básico y Premium
+        gap: $spacing-m;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .plan {
+        padding: $spacing-l;
+        border-radius: 8px;
+        border: 1px solid $color-secondary;
+        text-align: center;
+
+        h4 {
+            font-size: 1.5rem;
+            margin-bottom: $spacing-m / 2;
+            color: $color-primary;
+        }
+
+        .price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: $color-primary;
+            margin-bottom: $spacing-m;
+        }
+        
+        .billing-note {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: $spacing-m;
+        }
+
+        ul {
+            list-style: none;
+            text-align: left;
+            margin-bottom: $spacing-l;
+            
+            li {
+                padding: 8px 0;
+                border-bottom: 1px dotted $color-secondary; // Separador sutil
+                font-size: 1rem;
+            }
+        }
+
+        // Estilo específico para Premium
+        &.premium {
+            background-color: $color-secondary; // Fondo ligeramente diferente
+            border: 2px solid $color-accent;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            
+            .tag {
+                position: absolute;
+                top: -15px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: $color-accent;
+                color: $color-light;
+                padding: 5px 15px;
+                border-radius: 50px;
+                font-size: 0.9rem;
+                font-weight: bold;
+            }
+        }
+    }
+    
+    // Botones de los planes
+    .btn-plan-basico {
+        @include button-base(lighten($color-primary, 50%), $color-primary); // Botón más claro
+    }
+
+    .btn-plan-premium {
+        @include button-base($color-cta, $color-light); // Mismo color CTA que el Hero
+    }
+}
+
+// ===============================================
+// 6. SECCIÓN DE CARACTERÍSTICAS
+// ===============================================
+
+.features-section {
+    padding: $spacing-l * 1.5 0;
+    text-align: center;
+    background-color: $color-secondary; // Usamos el azul claro para diferenciar del fondo blanco
+    
+    .main-container {
+        max-width: $max-width;
+        margin: 0 auto;
+        padding: 0 $spacing-m;
+    }
+
+    h3 {
+        font-size: 2rem;
+        color: $color-primary;
+        margin-bottom: $spacing-l;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); // Tres columnas iguales
+        gap: $spacing-l;
+    }
+
+    .feature-block {
+        padding: $spacing-m;
+        border-radius: 8px;
+        background-color: $color-light; // Fondo blanco sobre el fondo azul claro
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); // Sombra sutil
+        
+        .icon {
+            font-size: 3rem;
+            color: $color-accent; // Usamos el color menta para los iconos
+            margin-bottom: $spacing-m / 2;
+        }
+
+        h4 {
+            font-size: 1.3rem;
+            color: $color-primary;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #555;
+            font-size: 1rem;
+        }
+    }
+}
+
+// ===============================================
+// 7. PIE DE PÁGINA
+// ===============================================
+
+footer {
+    padding: $spacing-m 0;
+    border-top: 1px solid $color-secondary;
+    text-align: center;
+    background-color: $color-primary;
+    color: $color-light;
+
+    .footer-links a {
+        color: $color-light;
+        margin: 0 15px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+    
+    p {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        color: rgba($color-light, 0.7);
+    }
+}
+// ===============================================
+// 8. SECCIÓN DE CONTACTO
+// ===============================================
+
+.contact-section {
+    padding: $spacing-l * 1.5 0;
+
+    .contact-header {
+        text-align: center;
+        margin-bottom: $spacing-l;
+        
+        h2 {
+            font-size: 2rem;
+            color: $color-primary;
+            margin-bottom: $spacing-m / 2;
+        }
+        p {
+            font-size: 1.1rem;
+            color: #555;
+        }
+    }
+
+    .contact-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr; // El formulario es más ancho que la información
+        gap: $spacing-l;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 $spacing-m; // Mantiene el padding del main
+    }
+    
+    // Estilos generales para ambos bloques
+    .contact-form-side, .contact-info-side {
+        padding: $spacing-l;
+        border: 1px solid $color-secondary;
+        border-radius: 8px;
+        background-color: $color-light;
+    }
+    
+    // Estilos del Formulario
+    .contact-form-side {
+        h3 {
+            color: $color-primary;
+            margin-bottom: $spacing-m;
+        }
+        
+        .form-group {
+            margin-bottom: $spacing-m;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: $color-text;
+        }
+        
+        input[type="text"], 
+        input[type="email"], 
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            
+            &:focus {
+                border-color: $color-primary;
+                outline: none;
+            }
+        }
+
+        textarea {
+            resize: vertical;
+        }
+        
+        // El botón usa el mixin definido anteriormente
+        .btn-cta {
+            @include button-base($color-cta, $color-light);
+            width: 100%;
+            margin-top: $spacing-m;
+        }
+    }
+    
+    // Estilos de la Información
+    .contact-info-side {
+        h3 {
+            color: $color-primary;
+            margin-bottom: $spacing-m;
+        }
+
+        .info-block {
+            margin-bottom: $spacing-m * 1.5;
+            padding-bottom: $spacing-m;
+            border-bottom: 1px dotted $color-secondary;
+            
+            &:last-child {
+                border-bottom: none;
+            }
+
+            h4 {
+                color: $color-accent; // Usamos el verde menta para destacar títulos de info
+                margin-bottom: 5px;
+                font-size: 1.1rem;
+            }
+        }
+    }
+}
+// ===============================================
+// 9. SECCIÓN DE ACCESO (LOGIN/REGISTRO)
+// ===============================================
+
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; // Ocupa toda la altura de la vista
+    background-color: $color-secondary; // Fondo Azul Claro (Limpieza)
+
+    .login-container {
+        width: 100%;
+        max-width: 400px; // Tamaño fijo para el formulario
+        padding: $spacing-l;
+        background-color: $color-light;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); // Sombra que le da toque "Élite"
+        text-align: center;
+    }
+
+    .login-header {
+        margin-bottom: $spacing-l;
+        
+        .logo {
+            margin-bottom: $spacing-m;
+            a h1 {
+                font-size: 2rem;
+            }
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: $color-primary;
+        }
+    }
+    
+    // Reutilizamos estilos de formulario del Contacto
+    .form-group {
+        margin-bottom: $spacing-m;
+        text-align: left;
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+    }
+
+    .btn-cta {
+        @include button-base($color-cta, $color-light); // Usamos el mixin de botón CTA
+        width: 100%;
+        padding: 12px;
+        font-size: 1.1rem;
+        margin-top: $spacing-m;
+    }
+    
+    .login-footer {
+        margin-top: $spacing-l;
+        
+        .forgot-link, .register-link {
+            color: $color-primary;
+            text-decoration: none;
+            
+            &:hover {
+                text-decoration: underline;
+                color: $color-cta;
+            }
+        }
+        p {
+            margin-top: 8px;
+        }
+    }
+}
+
+// Estilo para el pie de página legal en páginas de acceso (simple)
+.legal-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.8rem;
+    color: #777;
+    background-color: $color-light;
+    
+    a {
+        color: #777;
+        text-decoration: none;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+// ... dentro de la sección 9. SECCIÓN DE ACCESO ...
+
+// Estilos específicos para el grupo de checkbox legal
+.checkbox-group {
+    display: flex;
+    align-items: flex-start; // Alinea el texto con la caja
+    margin-top: $spacing-m;
+    
+    input[type="checkbox"] {
+        margin-right: 10px;
+        min-width: 16px; // Asegura que la caja sea visible
+        height: 16px;
+        margin-top: 3px; // Ajuste fino para la alineación
+    }
+
+    label {
+        font-weight: normal;
+        font-size: 0.9rem;
+        
+        a {
+            color: $color-primary; // Enlaces legales con el color de la marca
+            text-decoration: underline;
+            &:hover {
+                color: $color-cta;
+            }
+        }
+    }
+}
+// ===============================================
+// 10. ESTILOS DEL DASHBOARD (PANEL INTERNO)
+// ===============================================
+
+#app-container {
+    display: flex; // Usa Flexbox para dividir la pantalla
+    min-height: 100vh;
+    background-color: $color-light;
+}
+
+// A. Menú Lateral (Sidebar)
+#sidebar {
+    width: 250px; // Ancho fijo para el menú
+    background-color: $color-primary; // Azul Marino de la marca
+    color: $color-light;
+    padding: $spacing-m;
+    flex-shrink: 0; // Evita que se encoja
+    
+    .logo-dashboard {
+        text-align: center;
+        margin-bottom: $spacing-l * 1.5;
+
+        a { text-decoration: none; }
+        h1 {
+            color: $color-light;
+            font-size: 1.6rem;
+        }
+    }
+
+    .main-menu ul {
+        list-style: none;
+
+        li a {
+            display: block;
+            padding: 12px $spacing-m;
+            text-decoration: none;
+            color: rgba($color-light, 0.85);
+            font-weight: 500;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            transition: background-color 0.3s ease;
+
+            &:hover, &.active {
+                background-color: lighten($color-primary, 10%); // Un tono de azul más claro al pasar el ratón
+                color: $color-light;
+            }
+        }
+    }
+
+    .user-info {
+        position: absolute;
+        bottom: $spacing-m;
+        width: 210px; // Se ajusta al padding del sidebar
+        padding-top: $spacing-m;
+        border-top: 1px solid rgba($color-light, 0.2);
+        
+        p { margin-bottom: 5px; }
+
+        a {
+            color: $color-accent; // Cerrar sesión en color menta
+            text-decoration: none;
+            font-size: 0.9rem;
+            &:hover { text-decoration: underline; }
+        }
+    }
+}
+
+// B. Contenido Principal (Main Content)
+#main-content {
+    flex-grow: 1; 
+    padding: $spacing-l; // Mantener el padding general
+    
+    #topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $spacing-l; // Aumentar el margen debajo de la barra
+        padding-bottom: $spacing-m; // Mantener el padding interno
+        border-bottom: 1px solid $color-secondary;
+        
+        h2 {
+            font-size: 1.8rem;
+            color: $color-primary;
+            // Quitamos el margen interior para que el contenido respire
+            margin-right: $spacing-m; 
+        }
+
+        .btn-primary {
+            @include button-base($color-cta, $color-light); // Botón CTA para acciones rápidas
+        }
+    }
+
+    .content-area {
+        // Área donde se cargan los módulos
+    }
+}
+// ===============================================
+// 11. ESTILOS DE TABLAS Y LISTADOS (Clientes/Facturas)
+// ===============================================
+
+// Barra de acciones (búsqueda y filtros)
+.client-actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-m * 1.5;
+}
+
+.search-box {
+    display: flex;
+    width: 400px;
+    
+    input[type="text"] {
+        flex-grow: 1;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px 0 0 4px;
+        font-size: 1rem;
+        
+        &:focus {
+            border-color: $color-primary;
+            outline: none;
+        }
+    }
+    
+    .btn-search {
+        @include button-base($color-primary, $color-light);
+        padding: 10px 15px;
+        border-radius: 0 4px 4px 0;
+    }
+}
+
+// Estilos Generales para Tablas de Datos
+.data-table {
+    width: 100%;
+    border-collapse: collapse; // Elimina el espacio entre bordes
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background-color: $color-light;
+    
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid $color-secondary;
+    }
+    
+    // Encabezado de la tabla
+    thead {
+        th {
+            background-color: $color-secondary; // Azul claro sutil para el fondo
+            color: $color-primary;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+    }
+
+    // Filas del cuerpo
+    tbody {
+        tr:hover {
+            background-color: lighten($color-secondary, 5%); // Destaca la fila al pasar el ratón
+        }
+        
+        // Botones de acción dentro de la tabla
+        .btn-action {
+            color: $color-primary;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+
+            &:hover {
+                color: $color-cta;
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+// Estilos para las etiquetas de estado (Historial)
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    
+    &.complete {
+        background-color: rgba($color-accent, 0.15); // Verde Menta muy claro
+        color: darken($color-accent, 10%);
+    }
+
+    &.pending {
+        background-color: rgba($color-cta, 0.15); // Naranja Coral muy claro
+        color: darken($color-cta, 10%);
+    }
+}
+// ===============================================
+// Mixin para Botones Secundarios (Barra de herramientas)
+// ===============================================
+
+@mixin button-secondary-base($bg-color) {
+    display: inline-block;
+    padding: 8px 15px;
+    border: 1px solid $bg-color;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    background-color: $color-light;
+    color: $bg-color;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+        background-color: rgba($bg-color, 0.1);
+    }
+    &.active { // Estilo para el botón de vista activa
+        background-color: $bg-color;
+        color: $color-light;
+    }
+}
+
+// ===============================================
+// 12. ESTILOS DEL CALENDARIO
+// ===============================================
+
+.calendar-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-m;
+    padding: $spacing-m / 2 $spacing-m;
+    background-color: $color-secondary; // Fondo sutil
+    border-radius: 6px;
+
+    .view-controls button, .btn-today {
+        @include button-secondary-base($color-primary); // Botones secundarios con color primario
+        margin-right: 5px;
+    }
+    
+    .month-navigator {
+        display: flex;
+        align-items: center;
+        
+        h3 {
+            margin: 0 15px;
+            color: $color-primary;
+            font-size: 1.3rem;
+        }
+
+        .btn-icon { // Estilo para los botones de navegación (◀️ ▶️)
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+
+            &:hover {
+                background-color: #eee;
+            }
+        }
+    }
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); // 7 columnas para los días
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 600px; // Altura fija para que la cuadrícula se vea estable
+
+    .day-header {
+        background-color: darken($color-secondary, 5%);
+        color: $color-primary;
+        font-weight: bold;
+        padding: 10px 5px;
+        text-align: center;
+        border-right: 1px solid #ddd;
+        &:last-child { border-right: none; }
+    }
+
+    .day-cell {
+        min-height: 100px;
+        border-top: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+        padding: 5px;
+        font-size: 0.9rem;
+        position: relative;
+
+        &:nth-child(7n) { border-right: none; }
+        
+        &.past {
+            background-color: #f7f7f7;
+            color: #999;
+        }
+
+        &.current-month {
+            background-color: $color-light;
+            color: $color-text;
+            
+            &.has-event {
+                border: 2px solid $color-accent; // Destaca el día con eventos (Verde Menta)
+            }
+        }
+    }
+    
+    .event-mini {
+        background-color: rgba($color-accent, 0.7);
+        color: $color-light;
+        padding: 2px 5px;
+        border-radius: 3px;
+        margin-top: 3px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 0.75rem;
+    }
+}
+// ===============================================
+// 13. ESTILOS DE FACTURACIÓN Y REPORTES
+// ===============================================
+
+.billing-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); // Tres tarjetas de resumen
+    gap: $spacing-m;
+    margin-bottom: $spacing-l;
+    text-align: center;
+}
+
+.summary-card {
+    padding: $spacing-m;
+    border-radius: 8px;
+    background-color: $color-light;
+    border: 1px solid $color-secondary;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+    h4 {
+        font-size: 1rem;
+        color: #777;
+        margin-bottom: 5px;
+    }
+
+    .summary-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: $color-primary;
+        
+        &.status-pending {
+            color: $color-cta; // Resalta el valor pendiente con el color CTA (Naranja)
+        }
+    }
+}
+
+.filter-bar {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    padding: $spacing-m;
+    background-color: lighten($color-secondary, 2%);
+    border-radius: 6px;
+    margin-bottom: $spacing-m;
+
+    input[type="month"], select {
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        color: $color-text;
+        
+        &:focus {
+            border-color: $color-primary;
+            outline: none;
+        }
+    }
+    
+    // Reutilizamos el botón secundario para el reporte
+    .btn-secondary {
+        @include button-secondary-base($color-primary); 
+    }
+}
+// ... dentro de styles.scss
+
+// ===============================================
+// 14. ESTILOS DEL INICIO (DASHBOARD)
+// ===============================================
+
+.dashboard-section {
+    background-color: $color-light;
+    padding: $spacing-m;
+    border-radius: 8px;
+    border: 1px solid $color-secondary;
+    margin-bottom: $spacing-l;
+
+    h3 {
+        color: $color-primary;
+        margin-bottom: $spacing-m;
+        border-bottom: 1px solid $color-secondary;
+        padding-bottom: 5px;
+    }
+
+    // Estilos para la lista de alertas/tareas
+    ul {
+        list-style: none;
+        padding-left: 0;
+        
+        li {
+            padding: 8px 0;
+            border-bottom: 1px dotted #eee;
+            font-size: 1rem;
+            
+            a {
+                color: $color-primary;
+                text-decoration: none;
+                &:hover { text-decoration: underline; }
+            }
+        }
+    }
+}
+
+// Estilo para el botón de upgrade en la barra lateral (SIDEBAR)
+#sidebar {
+    // ... estilos existentes ...
+    
+    .user-info {
+        // ... estilos existentes ...
+        
+        .btn-upgrade-mobile {
+            display: block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            text-align: center;
+            font-weight: bold;
+            // Usamos el color CTA para el botón de compra
+            background-color: $color-cta; 
+            color: $color-light;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+
+            &:hover {
+                background-color: darken($color-cta, 10%);
+            }
+        }
+    }
+}
+    // ... dentro de styles.scss (en la sección que consideres apropiada, ej. cerca de .dashboard-section)
+
+.alert-info {
+    padding: $spacing-m;
+    background-color: rgba($color-primary, 0.1); // Fondo muy claro del color principal
+    border: 1px solid $color-primary;
+    border-radius: 6px;
+    color: $color-text;
+    margin-bottom: $spacing-l;
+   
+    p { margin: 0; }
+}
+// ... (Despues de la sección 9 o al final)
+
+// ===============================================
+// 15. ESTILOS DE LA PÁGINA DE UPGRADE (PREMIUM)
+// ===============================================
+
+.upgrade-page-layout {
+    display: flex;
+    justify-content: center; 
+    align-items: flex-start;
+    min-height: 100vh;
+    background-color: $color-secondary; 
+    padding: $spacing-l * 3 0; // Mucho espacio vertical
+}
+
+.upgrade-container {
+    width: 100%;
+    max-width: 900px; 
+    text-align: center; 
+    padding: 0 $spacing-l; // Aumentar el padding lateral del contenedor
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.upgrade-header {
+    margin-bottom: $spacing-l * 2.5; // MUCHO ESPACIO ANTES DE LA TARJETA DEL PLAN
+    
+    .logo {
+        // Aseguramos que el logo esté centrado y tenga un margen inferior claro
+        display: block; 
+        text-align: center;
+        padding-bottom: $spacing-l;
+        margin-bottom: $spacing-m; // Separación del logo al título
+        
+        a h1 { // Asegurar el tamaño del logo
+            font-size: 2.5rem;
+        }
+    }
+    
+    h2 {
+        // Título principal con mucho más aire vertical
+        font-size: 2.8rem; 
+        color: $color-primary;
+        margin-top: $spacing-m * 1.5;
+        line-height: 1.1; 
+    }
+    p {
+        // Párrafo con más espacio
+        font-size: 1.3rem; 
+        color: #555;
+        margin-top: $spacing-m * 1.5; 
+        max-width: 700px; // Aumentamos el ancho máximo del párrafo
+        margin-left: auto; 
+        margin-right: auto;
+    }
+}
+.premium-card-wrapper {
+    padding: $spacing-m;
+    background-color: $color-light;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.internal-plan {
+    padding: $spacing-l;
+    
+    .price {
+        font-size: 2.5rem;
+        margin-top: 10px;
+    }
+
+    .feature-list {
+        list-style: none;
+        text-align: left;
+        padding: 0;
+        margin: $spacing-l 0;
+        
+        li {
+            padding: 10px 0;
+            font-size: 1.1rem;
+            border-bottom: 1px dotted $color-secondary;
+        }
+    }
+    
+    .btn-upgrade-final {
+        @include button-base($color-cta, $color-light);
+        width: 100%;
+        padding: 15px;
+        font-size: 1.2rem;
+        margin-top: $spacing-m;
+        margin-bottom: $spacing-m;
+    }
+
+    .link-back-dashboard {
+        color: $color-primary;
+        text-decoration: none;
+        &:hover { text-decoration: underline; }
+    }
+}
+// ===============================================
+// 16. ESTILOS DE FICHA DE PACIENTE (DETALLE)
+// ===============================================
+
+.patient-info-card {
+    background-color: #f7f9fb;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 15px;
+    
+    strong {
+        color: $color-primary;
+    }
+}
+
+.actions-footer {
+    padding-top: 20px;
+    margin-top: 20px;
+    border-top: 1px solid #e0e0e0;
+    
+    .btn-sm {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        margin-right: 10px;
+    }
+}
+
+.tab-section {
+    padding: 20px 0;
+    h2 {
+        color: $color-primary;
+        font-size: 1.6rem;
+        margin-bottom: 15px;
+    }
+}
+
+.section-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+/* Fondo oscurecido que cubre toda la pantalla */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0,0,0,0.5); /* Color negro con transparencia */
+    backdrop-filter: blur(3px); /* Efecto de desenfoque opcional */
+}
+
+/* La tarjeta blanca del formulario */
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto; /* 10% desde arriba y centrado */
+    padding: 30px;
+    border-radius: 12px;
+    width: 450px; /* Ancho fijo para que se vea ordenado */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+    animation: slideDown 0.3s ease-out;
+}
+
+/* Animación para que el modal "caiga" suavemente */
+@keyframes slideDown {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Botón de cerrar (X) */
+.close-button {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.close-button:hover { color: #333; }

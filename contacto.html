@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto | Aura Elite</title> 
+    <link rel="stylesheet" href="assets/css/styles.css"> 
+    <style>
+        /* ESTILOS ESPECÍFICOS PARA CONTACTO */
+        .contact-section { max-width: 1000px; margin: 40px auto; padding: 20px; }
+        
+        .contact-header { text-align: center; margin-bottom: 50px; }
+        .contact-header h2 { color: #2c3e50; font-size: 36px; margin-bottom: 10px; }
+        .contact-header p { color: #7f8c8d; font-size: 18px; }
+
+        .contact-container { 
+            display: grid; 
+            grid-template-columns: 2fr 1fr; /* Formulario ancho, Info estrecha */
+            gap: 40px; 
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid #f0f0f0;
+        }
+
+        /* Columna Izquierda: Formulario */
+        .contact-form-side { padding: 40px; }
+        .contact-form-side h3 { color: #3498db; margin-top: 0; margin-bottom: 25px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; font-size: 14px; }
+        .form-group input, .form-group textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            transition: border 0.3s;
+            box-sizing: border-box; /* Vital para que no se salga del contenedor */
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #3498db; outline: none; }
+
+        /* Columna Derecha: Info */
+        .contact-info-side { 
+            background: #f8f9fa; 
+            padding: 40px; 
+            border-left: 1px solid #eee;
+        }
+        .contact-info-side h3 { color: #2c3e50; margin-top: 0; margin-bottom: 25px; }
+        .info-block { margin-bottom: 30px; }
+        .info-block h4 { margin-bottom: 10px; color: #3498db; font-size: 16px; }
+        .info-block p { margin: 5px 0; color: #666; font-size: 14px; line-height: 1.5; }
+
+        /* Botón */
+        .btn-submit {
+            background: #27ae60; color: white; border: none; padding: 15px 30px;
+            font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer;
+            width: 100%; transition: background 0.3s;
+        }
+        .btn-submit:hover { background: #2ecc71; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .contact-container { grid-template-columns: 1fr; }
+            .contact-info-side { border-left: none; border-top: 1px solid #eee; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-dashboard">
+            <a href="index.html">
+                <h1 id="app-name-sidebar">Cargando...</h1>
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html#features">Funcionalidades</a></li>
+                <li><a href="index.html#pricing">Precios</a></li>
+                <li><a href="login.html">Acceso (Login)</a></li>
+            </ul>
+        </nav>
+        <a href="registro.html" class="btn-cta" style="text-decoration: none; margin-left: 20px;">Regístrate Gratis</a>
+    </header>
+
+    <main>
+        
+        <section id="contacto" class="contact-section">
+            <div class="contact-header">
+                <h2>¿Cómo podemos ayudarte?</h2>
+                <p>El equipo de soporte de <span class="brand-name-text">Aura Elite</span> está aquí para ti.</p>
+            </div>
+
+            <div class="contact-container">
+                
+                <article class="contact-form-side">
+                    <h3>📩 Envíanos un mensaje</h3>
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <label for="nombre">Nombre Completo:</label>
+                            <input type="text" id="nombre" required placeholder="Ej: Dr. Roberto">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Correo Electrónico:</label>
+                            <input type="email" id="email" required placeholder="tu@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="asunto">Asunto:</label>
+                            <input type="text" id="asunto" required placeholder="Ej: Duda sobre facturación">
+                        </div>
+                        <div class="form-group">
+                            <label for="mensaje">Mensaje:</label>
+                            <textarea id="mensaje" rows="5" required placeholder="Escribe aquí tu consulta..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit">Enviar Mensaje</button>
+                    </form>
+                </article>
+
+                <article class="contact-info-side">
+                    <h3>📍 Información Directa</h3>
+                    
+                    <div class="info-block">
+                        <h4>Soporte Técnico</h4>
+                        <p>¿Problemas con la plataforma?</p>
+                        <p>📧 <strong>soporte@auraelite.com</strong></p>
+                    </div>
+
+                    <div class="info-block">
+                        <h4>Ventas y Planes</h4>
+                        <p>Dudas sobre precios o descuentos para empresas.</p>
+                        <p>📧 <strong>ventas@auraelite.com</strong></p>
+                    </div>
+
+                    <div class="info-block">
+                        <h4>Horario de Atención</h4>
+                        <p>Lunes a Viernes</p>
+                        <p>9:00 AM - 6:00 PM</p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+    </main>
+
+    <footer style="background: #2c3e50; color: white; text-align: center; padding: 40px 20px;">
+        <div class="footer-links" style="margin-bottom: 20px;">
+            <a href="aviso-legal.html" style="color: #bdc3c7; text-decoration: none; margin: 0 10px;">Aviso Legal</a>
+            <a href="politica-privacidad.html" style="color: #bdc3c7; text-decoration: none; margin: 0 10px;">Política de Privacidad</a>
+            <a href="contacto.html" style="color: white; text-decoration: underline; margin: 0 10px;">Contacto</a>
+        </div>
+        <p style="opacity: 0.6; font-size: 14px;">&copy; 2025 Aura Elite Software. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="assets/js/brandConfig.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Pintar Marca
+            const sidebarTitle = document.getElementById('app-name-sidebar');
+            const textSpans = document.querySelectorAll('.brand-name-text');
+            
+            if(typeof APP_CONFIG !== 'undefined') {
+                if(sidebarTitle) sidebarTitle.innerText = APP_CONFIG.appName;
+                document.title = `Contacto | ${APP_CONFIG.appName}`;
+                textSpans.forEach(el => el.innerText = APP_CONFIG.appName);
+            }
+
+            // 2. Simular Envío de Formulario
+            const form = document.getElementById('contactForm');
+            if(form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault(); // Evitar recarga
+                    const btn = form.querySelector('button');
+                    const originalText = btn.innerText;
+
+                    btn.innerText = "Enviando...";
+                    btn.style.background = "#95a5a6";
+                    btn.disabled = true;
+
+                    setTimeout(() => {
+                        alert("✅ ¡Mensaje enviado con éxito!\n\nNos pondremos en contacto contigo pronto.");
+                        form.reset();
+                        btn.innerText = originalText;
+                        btn.style.background = "#27ae60";
+                        btn.disabled = false;
+                    }, 1500);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

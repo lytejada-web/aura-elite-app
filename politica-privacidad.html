@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad | Aura Elite</title> 
+    <link rel="stylesheet" href="assets/css/styles.css"> 
+</head>
+<body>
+
+    <header>
+        <div class="logo-dashboard">
+            <a href="index.html">
+                <h1 id="app-name-sidebar">Cargando...</h1>
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html#features">Funcionalidades</a></li>
+                <li><a href="index.html#pricing">Precios</a></li>
+                <li><a href="login.html">Acceso (Login)</a></li>
+            </ul>
+        </nav>
+        <a href="registro.html" class="btn-cta" style="text-decoration: none; margin-left: 20px;">Regístrate Gratis</a>
+    </header>
+
+    <main>
+        
+        <section id="politica-privacidad" class="legal-document" style="max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6;">
+            
+            <header class="document-header" style="text-align: center; margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+                <h2 style="color: #2c3e50; font-size: 32px;">Política de Privacidad</h2>
+                <p style="color: #7f8c8d;">Fecha de última actualización: 1 de Diciembre de 2025</p>
+            </header>
+
+            <article style="margin-bottom: 30px;">
+                <h3 style="color: #3498db;">1. Introducción y Responsable del Tratamiento</h3>
+                <p>Bienvenido a <strong>Aura Elite</strong>. La privacidad de nuestros usuarios y los datos de sus clientes son nuestra máxima prioridad. Esta política explica cómo recopilamos, utilizamos y protegemos la información obtenida a través de nuestra plataforma web.</p>
+                <p>El responsable del tratamiento de sus datos personales es: <strong>[TU NOMBRE O EMPRESA AQUÍ]</strong>.</p>
+                <p>Contacto: <strong>[TU EMAIL DE CONTACTO AQUÍ]</strong>.</p>
+            </article>
+
+            <article style="margin-bottom: 30px;">
+                <h3 style="color: #3498db;">2. Información Recopilada</h3>
+                <p>Recopilamos dos tipos de información:</p>
+                
+                <h4 style="color: #2c3e50; margin-top: 15px;">2.1. Datos del Profesional (Usted)</h4>
+                <ul>
+                    <li><strong>Datos de Identificación:</strong> Nombre completo o razón social, correo electrónico, profesión y teléfono.</li>
+                    <li><strong>Datos de la Cuenta:</strong> Credenciales de acceso (cifradas) y estado de la suscripción.</li>
+                </ul>
+
+                <h4 style="color: #2c3e50; margin-top: 15px;">2.2. Datos de Terceros (Sus Clientes)</h4>
+                <p>El Profesional (usted) es el <strong>responsable primario</strong> de los datos de sus clientes. Aura Elite actúa únicamente como <strong>encargado del tratamiento</strong> (proveedor de software).</p>
+                <ul>
+                    <li><strong>Datos de Clientes:</strong> Nombre, teléfono, historial de servicios y notas privadas.</li>
+                    <li><strong>Archivos Adjuntos:</strong> Aura Elite facilita la vinculación con su cuenta de Google Drive. <strong>Aura Elite NO almacena archivos físicos en sus servidores, solo gestiona los enlaces de acceso directo a su nube personal.</strong></li>
+                </ul>
+            </article>
+
+            <article style="margin-bottom: 30px;">
+                <h3 style="color: #3498db;">3. Finalidad del Tratamiento</h3>
+                <p>Los datos se usan para:</p>
+                <ul>
+                    <li>Proporcionar el Servicio SaaS (Agenda, Clientes, Facturación).</li>
+                    <li>Gestionar su cuenta y procesar pagos de suscripción.</li>
+                    <li>Enviar notificaciones técnicas o de seguridad.</li>
+                </ul>
+            </article>
+
+            <article style="margin-bottom: 30px;">
+                <h3 style="color: #3498db;">4. Seguridad</h3>
+                <p>Implementamos medidas de seguridad para proteger la información contra accesos no autorizados. Sin embargo, recuerde que <strong>usted es responsable de mantener la confidencialidad de su contraseña y de la seguridad de su cuenta de Google conectada.</strong></p>
+            </article>
+
+            <article style="margin-bottom: 30px;">
+                <h3 style="color: #3498db;">5. Sus Derechos</h3>
+                <p>Puede ejercer sus derechos de acceso, rectificación, cancelación y oposición enviando un correo a la dirección de contacto proporcionada al inicio.</p>
+            </article>
+
+        </section>
+
+    </main>
+
+    <footer style="background: #2c3e50; color: white; text-align: center; padding: 40px 20px;">
+        <div class="footer-links" style="margin-bottom: 20px;">
+            <a href="aviso-legal.html" style="color: #bdc3c7; text-decoration: none; margin: 0 10px;">Aviso Legal</a>
+            <a href="politica-privacidad.html" style="color: white; text-decoration: underline; margin: 0 10px;">Política de Privacidad</a>
+            <a href="contacto.html" style="color: #bdc3c7; text-decoration: none; margin: 0 10px;">Contacto</a>
+        </div>
+        <p style="opacity: 0.6; font-size: 14px;">&copy; 2025 Aura Elite Software. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="assets/js/brandConfig.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Pintar el nombre de la App
+            const sidebarTitle = document.getElementById('app-name-sidebar');
+            if(sidebarTitle && typeof APP_CONFIG !== 'undefined') {
+                sidebarTitle.innerText = APP_CONFIG.appName;
+                document.title = `Política de Privacidad | ${APP_CONFIG.appName}`;
+            }
+        });
+    </script>
+</body>
+</html>

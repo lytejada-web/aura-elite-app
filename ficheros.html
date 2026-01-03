@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Archivos | Aura Elite</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-container">
+        
+        <aside id="sidebar">
+            <div class="logo-dashboard">
+                <a href="dashboard.html">
+                <h1 id="app-name-sidebar">Cargando...</h1>
+                </a>
+            </div>
+            <nav class="main-menu">
+                <ul>
+                    <li><a href="dashboard.html">🏠 Inicio</a></li>
+                    <li><a href="calendario.html">📅 Calendario</a></li>
+                    <li><a href="clientes.html">👤 Clientes</a></li>
+                    <li><a href="facturas.html">💵 Facturación</a></li>
+                    <li><a href="ficheros.html" class="active">☁️ Ficheros (Drive)</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <p>Prof(a). <span id="user-display-name">Cargando...</span></p>
+                <a href="#" onclick="logout()">Cerrar Sesión</a>
+            </div>
+        </aside>
+
+        <section id="main-content">
+            <header id="topbar" style="justify-content: space-between;">
+                <h2>Gestión de Ficheros (Google Drive)</h2>
+                <button id="btn-connect-drive" class="btn" style="background: #e67e22; color: white;">☁️ Conectar Google Drive</button>
+            </header>
+
+            <div class="content-area">
+                
+                <div style="background: #e8f4fd; border: 1px solid #3498db; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                    <h3 style="margin-top: 0; color: #2980b9;">ℹ️ Estado de la Sincronización</h3>
+                    <p style="margin-bottom: 0; color: #555;">
+                        <span id="drive-status-text">⚠️ No conectado.</span> 
+                        Aura Elite organiza los accesos directos a las carpetas de tus Clientes para mantener la privacidad y el control total de tus datos.
+                    </p>
+                </div>
+
+                <h3 style="margin-bottom: 15px;">Carpetas de Clientes</h3>
+                <div style="background:#fff; border-radius:8px; overflow:hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>CLIENTE</th>
+                                <th>ESTADO DRIVE</th>
+                                <th>ENLACE GUARDADO</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="files-table-body">
+                            </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+    </div>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/moment.min.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/brandConfig.js"></script>
+
+    <script>
+    // Script pequeño para "pintar" la marca al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+        // 1. Cambiar Nombre en el Sidebar
+            const sidebarTitle = document.getElementById('app-name-sidebar');
+            if(sidebarTitle) sidebarTitle.innerText = APP_CONFIG.appName;
+
+        // 2. Cambiar Título de la pestaña del navegador
+            document.title = `${APP_CONFIG.appName} | ${APP_CONFIG.appTagline}`;
+
+        // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
+        // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
+        // Pero de momento, con el nombre ya se ve el cambio de marca.
+        });
+    </script>
+</body>
+</html>

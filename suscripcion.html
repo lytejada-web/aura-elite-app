@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activar Suscripción | Aura Elite</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        body { background: #f4f7f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: sans-serif; }
+        .paywall-container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; width: 100%; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; margin: 0; }
+        .header p { color: #7f8c8d; }
+        .price-box { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 2px solid #3498db; text-align: center; margin-bottom: 20px; }
+        .price-big { font-size: 36px; font-weight: bold; color: #2c3e50; }
+        .features-list { list-style: none; padding: 0; margin: 0 0 20px 0; }
+        .features-list li { padding: 8px 0; border-bottom: 1px solid #eee; color: #555; }
+        .features-list li:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <div class="paywall-container">
+        <div class="header">
+            <h1>💎 Activar Cuenta</h1>
+            <p>Hola, <span id="user-name">Profesional</span>. Para acceder al sistema, necesitas una suscripción activa.</p>
+        </div>
+
+        <div class="price-box">
+            <span style="display:block; font-size:14px; color:#999; text-transform:uppercase;">Plan Profesional</span>
+            <div class="price-big" id="display-price">$29.99</div>
+            <span style="color:#27ae60; font-weight:bold; display:none;" id="discount-msg">¡Descuento aplicado!</span>
+        </div>
+
+        <ul class="features-list">
+            <li>✅ Acceso ilimitado a Pacientes</li>
+            <li>✅ Agenda y Calendario</li>
+            <li>✅ Facturación PDF</li>
+        </ul>
+
+        <form id="payment-form">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="coupon" placeholder="Código de descuento" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <button type="button" id="btn-coupon" style="padding: 0 15px; cursor: pointer;">Aplicar</button>
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; background: #27ae60; color: white; padding: 15px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer;">
+                💳 Pagar y Activar
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="#" onclick="logout()" style="color: #e74c3c; text-decoration: none; font-size: 14px;">Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // 1. Mostrar nombre del usuario
+        const session = JSON.parse(localStorage.getItem('eliteDental_session'));
+        if(session) document.getElementById('user-name').innerText = session.name;
+
+        // 2. Lógica de Cupón
+        let price = 29.99;
+        document.getElementById('btn-coupon').onclick = () => {
+            const code = document.getElementById('coupon').value.toUpperCase();
+            if(code === 'DENTAL2025') {
+                price = 24.00;
+                document.getElementById('display-price').innerText = '$24.00';
+                document.getElementById('discount-msg').style.display = 'block';
+                alert("¡Descuento del 20% aplicado!");
+            } else if (code === 'GRATIS') { // Código secreto desarrollador
+                price = 0;
+                document.getElementById('display-price').innerText = '$0.00';
+                alert("Modo desarrollador activado.");
+            } else {
+                alert("Cupón inválido");
+            }
+        };
+
+        // 3. Procesar Pago y ACTIVAR CUENTA
+        document.getElementById('payment-form').onsubmit = (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            
+            btn.innerText = "Procesando...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                // AQUÍ OCURRE LA MAGIA: Actualizamos la base de datos local
+                
+                // A. Actualizar en la "Base de Datos" (Lista de usuarios)
+                const users = JSON.parse(localStorage.getItem('eliteDental_users_db')) || [];
+                const userIndex = users.findIndex(u => u.email === session.email);
+                
+                if (userIndex !== -1) {
+                    users[userIndex].plan_type = 'Premium'; // ¡YA ES PREMIUM!
+                    localStorage.setItem('eliteDental_users_db', JSON.stringify(users));
+                }
+
+                // B. Actualizar la Sesión actual
+                session.plan_type = 'Premium';
+                localStorage.setItem('eliteDental_session', JSON.stringify(session));
+
+                alert("🎉 ¡Pago aceptado! Bienvenido a Élite Dental.");
+                window.location.href = 'dashboard.html'; // Ahora auth.js le dejará pasar
+
+            }, 2000);
+        };
+    </script>
+    <script src="assets/js/brandConfig.js"></script>
+
+    <script>
+    // Script pequeño para "pintar" la marca al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+        // 1. Cambiar Nombre en el Sidebar
+            const sidebarTitle = document.getElementById('app-name-sidebar');
+            if(sidebarTitle) sidebarTitle.innerText = APP_CONFIG.appName;
+
+        // 2. Cambiar Título de la pestaña del navegador
+            document.title = `${APP_CONFIG.appName} | ${APP_CONFIG.appTagline}`;
+
+        // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
+        // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
+        // Pero de momento, con el nombre ya se ve el cambio de marca.
+        });
+    </script>
+</body>
+</html>

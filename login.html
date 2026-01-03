@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión | Aura Elite</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        /* Reusamos estilos del registro */
+        .auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f7f6; }
+        .auth-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .auth-btn { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+        .auth-btn:hover { background: #2ecc71; }
+        .auth-link { margin-top: 15px; display: block; color: #7f8c8d; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <div style="margin-bottom: 20px;">
+                <h1 style="color:#27ae60; margin:0;">Aura Elite</h1><a href="index.html"><img src="assets/images/AE.png" alt="Mi nombre es Luis." width="100" height="100"></a>
+                <p style="color:#7f8c8d; margin-top:5px;">Acceso Profesionales</p>
+            </div>
+
+            <h2>Iniciar Sesión</h2>
+            <form id="login-form">
+                <input type="email" id="login-email" class="auth-input" placeholder="Correo Electrónico" required>
+                <input type="password" id="login-pass" class="auth-input" placeholder="Contraseña" required>
+                
+                <button type="submit" class="auth-btn">Entrar</button>
+            </form>
+
+            <a href="registro.html" class="auth-link">¿No tienes cuenta? Regístrate Gratis</a>
+        </div>
+    </div>
+
+    <script src="assets/js/auth.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+
+            if(email && pass) {
+                loginUser(email, pass);
+            }
+        });
+    </script>
+    <script src="assets/js/brandConfig.js"></script>
+
+    <script>
+    // Script pequeño para "pintar" la marca al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+        // 1. Cambiar Nombre en el Sidebar
+            const sidebarTitle = document.getElementById('app-name-sidebar');
+            if(sidebarTitle) sidebarTitle.innerText = APP_CONFIG.appName;
+
+        // 2. Cambiar Título de la pestaña del navegador
+            document.title = `${APP_CONFIG.appName} | ${APP_CONFIG.appTagline}`;
+
+        // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
+        // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
+        // Pero de momento, con el nombre ya se ve el cambio de marca.
+        });
+    </script>
+</body>
+</html>
