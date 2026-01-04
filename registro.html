@@ -3,101 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro | Élite Dental</title>
+    <title>Registro | Aura Elite</title>
     <link rel="stylesheet" href="assets/css/styles.css">
-    <style>
-        /* Estilos específicos para Login/Registro */
-        .auth-container {
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; background: #f4f7f6;
-        }
-        .auth-box {
-            background: white; padding: 40px; border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1); width: 100%; max-width: 400px;
-            text-align: center;
-        }
-        .auth-box h2 { color: #2c3e50; margin-bottom: 20px; }
-        .auth-input {
-            width: 100%; padding: 12px; margin-bottom: 15px;
-            border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;
-        }
-        .auth-btn {
-            width: 100%; padding: 12px; background: #3498db; color: white;
-            border: none; border-radius: 6px; font-size: 16px; cursor: pointer;
-            transition: background 0.3s;
-        }
-        .auth-btn:hover { background: #2980b9; }
-        .auth-link { margin-top: 15px; display: block; color: #7f8c8d; text-decoration: none; font-size: 14px; }
-        .auth-link:hover { color: #3498db; }
-    </style>
 </head>
 <body>
 
-    <div class="auth-container">
-        <div class="auth-box">
-            <div style="margin-bottom: 20px;">
-                <h1 style="color:#3498db; margin:0;">Aura Elite</h1><a href="index.html"><img src="assets/images/AE.png" alt="Mi nombre es Luis." width="100" height="100"></a>
-                <p style="color:#7f8c8d; margin-top:5px;">Software de Gestión para profesionales</p>
+    <div class="main-container registro-container">
+        
+        <div class="image-side register-bg">
+            <div class="overlay">
+                <h2>Únete a la Élite</h2>
+                <p>Gestiona tu negocio profesional al siguiente nivel.</p>
             </div>
+        </div>
 
-            <h2>Crear Cuenta</h2>
-            <form id="register-form">
-                <input type="text" id="reg-name" class="auth-input" placeholder="Nombre Completo (Dr/Dra...)" required>
-                <input type="email" id="reg-email" class="auth-input" placeholder="Correo Electrónico" required>
-                <input type="password" id="reg-pass" class="auth-input" placeholder="Contraseña" required>
-                <select id="reg-profesion" class="auth-input" style="background: white;" required>
-                    <option value="" disabled selected>¿Cuál es tu profesión?</option>
-                    <option value="dental">🦷 Odontología / Clínica</option>
-                    <option value="belleza">💇‍♀️ Peluquería / Estética</option>
-                    <option value="tecnico">🔧 Electricista / Fontanero / Técnico</option>
-                    <option value="salud">physio Fisioterapia / Podología</option>
-                    <option value="legal">⚖️ Abogado / Consultor</option>
-                    <option value="otro">✨ Otro Servicios</option>
-                </select>
+        <div class="form-side">
+            <div class="form-wrapper">
+                
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <a href="index.html">
+                        <img src="assets/images/AE.png" alt="Aura Elite" width="80" height="80">
+                    </a>
+                    <h2 style="margin-top: 10px; color: #2c3e50;">Crear Cuenta</h2>
+                    <p style="color:#7f8c8d; font-size: 0.9rem;">Software de Gestión para profesionales</p>
+                </div>
 
-                <button type="submit" class="auth-btn">Crear Cuenta</button>
-            </form>
+                <form id="registroForm">
+                    
+                    <div class="input-group">
+                        <label for="nombre">Nombre Completo</label>
+                        <input type="text" id="nombre" placeholder="Ej: Dr. Luis Tejada" class="auth-input" required>
+                    </div>
 
-            <a href="login.html" class="auth-link">¿Ya tienes cuenta? Inicia Sesión</a>
+                    <div class="input-group">
+                        <label for="email">Correo Electrónico</label>
+                        <input type="email" id="email" placeholder="correo@ejemplo.com" class="auth-input" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" placeholder="******" class="auth-input" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="profesion">Profesión</label>
+                        <select id="profesion" class="auth-input" style="background: white;" required>
+                            <option value="" disabled selected>¿Cuál es tu profesión?</option>
+                            <option value="dental">🦷 Odontología / Clínica</option>
+                            <option value="belleza">💇‍♀️ Peluquería / Estética</option>
+                            <option value="tecnico">🔧 Electricista / Fontanero / Técnico</option>
+                            <option value="salud">physio Fisioterapia / Podología</option>
+                            <option value="legal">⚖️ Abogado / Consultor</option>
+                            <option value="otro">✨ Otros Servicios</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Crear Cuenta</button>
+                    
+                    <p class="switch-page" style="text-align: center; margin-top: 15px;">
+                        ¿Ya tienes cuenta? <a href="login.html">Inicia Sesión</a>
+                    </p>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="assets/js/auth.js"></script>
-    <script>
-        // Lógica específica del formulario
-        const form = document.getElementById('register-form');
-        
-        if (form) {
-            // En el <script> de registro.html
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const name = document.getElementById('reg-name').value;
-                const email = document.getElementById('reg-email').value;
-                const pass = document.getElementById('reg-pass').value;
-                const prof = document.getElementById('reg-profesion').value; // <--- CAPTURAR VALOR
 
-                if(name && email && pass && prof) {
-                    registerUser(name, email, pass, prof); // <--- PASAR VALOR
-                }
-            });
-        }
-    </script>
-    <script src="assets/js/brandConfig.js"></script>
-
-    <script>
-    // Script pequeño para "pintar" la marca al cargar
-        document.addEventListener('DOMContentLoaded', () => {
-        // 1. Cambiar Nombre en el Sidebar
-            const sidebarTitle = document.getElementById('app-name-sidebar');
-            if(sidebarTitle) sidebarTitle.innerText = APP_CONFIG.appName;
-
-        // 2. Cambiar Título de la pestaña del navegador
-            document.title = `${APP_CONFIG.appName} | ${APP_CONFIG.appTagline}`;
-
-        // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
-        // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
-        // Pero de momento, con el nombre ya se ve el cambio de marca.
-        });
-    </script>
 </body>
 </html>

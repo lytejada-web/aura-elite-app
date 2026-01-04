@@ -7,28 +7,6 @@
     <link rel="stylesheet" href="assets/css/styles.css"> 
     
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-    
-    <style>
-        /* Ajuste para que el botón de WhatsApp se vea bien */
-        .input-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .btn-whatsapp {
-            background-color: #25D366;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-        }
-        .btn-whatsapp:hover { background-color: #128C7E; }
-    </style>
 </head>
 <body>
 
@@ -37,7 +15,7 @@
         <aside id="sidebar">
             <div class="logo-dashboard">
                 <a href="dashboard.html">
-                <h1 id="app-name-sidebar">Cargando...</h1>
+                    <h1>Aura Elite</h1>
                 </a>
             </div>
             <nav class="main-menu">
@@ -49,17 +27,19 @@
                     <li><a href="ficheros.html">☁️ Ficheros (Drive)</a></li>
                 </ul>
             </nav>
-            
             <div class="user-info">
-                <p>Prof(a). <span id="user-display-name">Cargando...</span></p>
-                <a href="#" onclick="logout()">Cerrar Sesión</a>
+                <p>Prof(a). <span id="user-display-name">Usuario</span></p>
+                <a href="#" id="btn-logout" style="color: #ff6b6b;">Cerrar Sesión</a>
             </div>
         </aside>
 
         <section id="main-content">
             
             <header id="topbar">
-                <h2>Módulo de Calendario y Citas</h2>
+                <button id="btn-menu-mobile" style="display: none;">
+                    ☰
+                </button>
+                <h2>Calendario y Citas</h2>
                 <button id="btn-new-appointment" class="btn-primary">➕ Nueva Cita</button> 
             </header>
             
@@ -73,104 +53,114 @@
         
     </div>
 
-    <div id="new-appointment-modal" class="modal" style="display: none;">
+    <div id="new-appointment-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            
-            <h2 style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">📅 Gestión de Cita</h2>
+            <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: #154360;">📅 Gestión de Cita</h2>
             
             <form id="appointment-form">
                 <input type="hidden" id="appointment-id">
 
-                <div class="form-group">
-                    <label for="paciente-id" style="font-weight: bold;">Cliente:</label>
-                    <select id="paciente-id" required style="width: 100%; padding: 10px; margin-bottom: 10px;">
-                        </select>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="paciente-id" style="display:block; font-weight: bold; margin-bottom: 5px;">Cliente:</label>
+                    <select id="paciente-id" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option>Cargando...</option>
+                    </select>
                 </div>
 
-                <div id="campos-nuevo-paciente" style="display: none; background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #3498db;">
-                    <h4 style="margin-top: 0; color: #2980b9;">👤 Registrar Nuevo cliente</h4>
-                    <div class="form-group">
-                        <label>Nombre Completo:</label>
-                        <input type="text" id="nuevo-paciente-nombre" placeholder="Ej: Juan Pérez" style="width: 100%;">
-                    </div>
-                    <div class="form-group">
-                        <label>Teléfono:</label>
-                        <div class="input-group">
-                            <input type="text" id="nuevo-paciente-tel" placeholder="Ej: 04141234567" style="width: 100%;">
-                            <a href="#" id="btn-whatsapp-direct" class="btn-whatsapp" target="_blank" title="Abrir WhatsApp Web" style="display:none;">
-                                💬 Chat
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="cita-titulo" style="font-weight: bold;">Motivo / Tratamiento:</label>
-                    <input type="text" id="cita-titulo" required placeholder="Ej: Limpieza, Ortodoncia..." style="width: 95%; padding: 10px;">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="cita-titulo" style="display:block; font-weight: bold; margin-bottom: 5px;">Motivo / Tratamiento:</label>
+                    <input type="text" id="cita-titulo" required placeholder="Ej: Limpieza, Ortodoncia..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 </div>
                 
-                <div class="form-group-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                    <div class="form-group">
-                        <label>Inicio:</label>
-                        <input type="datetime-local" id="fecha-inicio" required style="width: 100%;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display:block; font-weight: bold; margin-bottom: 5px;">Inicio:</label>
+                        <input type="datetime-local" id="fecha-inicio" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                     </div>
-                    <div class="form-group">
-                        <label>Fin:</label>
-                        <input type="datetime-local" id="fecha-fin" required style="width: 100%;">
+                    <div>
+                        <label style="display:block; font-weight: bold; margin-bottom: 5px;">Fin:</label>
+                        <input type="datetime-local" id="fecha-fin" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; font-size: 16px;">
-                        💾 Guardar
-                    </button>
-                    
-                    <button type="button" id="btn-delete" class="btn" style="background: #e74c3c; color: white; display: none; padding: 12px; border: none; border-radius: 4px; cursor: pointer;">
-                        🗑️ Eliminar
-                    </button>
-                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px;">💾 Guardar Cita</button>
             </form>
         </div>
     </div>
+
     <script src="assets/js/auth.js"></script>
-    <script src="assets/js/config.js"></script>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="assets/js/moment.min.js"></script>
-    
-    <script src="assets/js/locale/es.js"></script>
-    
     <script src="assets/js/app.js"></script>
 
     <script>
-        // Actualizar enlace de WhatsApp cuando escriben el teléfono
-        document.getElementById('nuevo-paciente-tel').addEventListener('input', function(e) {
-            const btn = document.getElementById('btn-whatsapp-direct');
-            const num = e.target.value.replace(/\D/g,''); // Solo números
-            if(num.length > 6) {
-                btn.style.display = 'flex';
-                btn.href = `https://wa.me/${num}`;
-            } else {
-                btn.style.display = 'none';
+        document.addEventListener("DOMContentLoaded", function() {
+            // Lógica del Menú Móvil
+            var btn = document.getElementById("btn-menu-mobile");
+            var sidebar = document.getElementById("sidebar");
+
+            if (btn && sidebar) {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault(); e.stopPropagation();
+                    sidebar.classList.toggle("active");
+                });
+
+                document.addEventListener("click", function(e) {
+                    if (window.innerWidth < 768 && sidebar.classList.contains("active") && !sidebar.contains(e.target) && e.target !== btn) {
+                        sidebar.classList.remove("active");
+                    }
+                });
             }
+
+            // Cargar nombre de usuario
+            const userJson = localStorage.getItem('aura_elite_user');
+            if (userJson) {
+                const user = JSON.parse(userJson);
+                const nameDisplay = document.getElementById('user-display-name');
+                if(nameDisplay) nameDisplay.innerText = user.name.split(' ')[0];
+            }
+            
+            // Botón logout
+            const btnLogout = document.getElementById('btn-logout');
+            if(btnLogout) btnLogout.onclick = () => { localStorage.removeItem('aura_elite_token'); window.location.href = 'login.html'; };
         });
     </script>
-    <script src="assets/js/brandConfig.js"></script>
-
     <script>
-    // Script pequeño para "pintar" la marca al cargar
-        document.addEventListener('DOMContentLoaded', () => {
-        // 1. Cambiar Nombre en el Sidebar
-            const sidebarTitle = document.getElementById('app-name-sidebar');
-            if(sidebarTitle) sidebarTitle.innerText = APP_CONFIG.appName;
+        // SCRIPT DE EMERGENCIA PARA EL MENÚ
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Iniciando script de menú...");
+            
+            var btn = document.getElementById("btn-menu-mobile");
+            var sidebar = document.getElementById("sidebar");
 
-        // 2. Cambiar Título de la pestaña del navegador
-            document.title = `${APP_CONFIG.appName} | ${APP_CONFIG.appTagline}`;
+            if (btn && sidebar) {
+                // Forzamos un clon del botón para eliminar eventos viejos que fallen
+                var newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Evitar que otros clics interfieran
+                    
+                    if (sidebar.classList.contains("active")) {
+                        sidebar.classList.remove("active");
+                    } else {
+                        sidebar.classList.add("active");
+                    }
+                    console.log("Menú pulsado. Estado active:", sidebar.classList.contains("active"));
+                });
 
-        // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
-        // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
-        // Pero de momento, con el nombre ya se ve el cambio de marca.
+                // Cerrar al tocar fuera
+                document.addEventListener("click", function(e) {
+                    if (window.innerWidth < 768 && 
+                        sidebar.classList.contains("active") && 
+                        !sidebar.contains(e.target) && 
+                        e.target !== newBtn) {
+                        sidebar.classList.remove("active");
+                    }
+                });
+            } else {
+                console.error("No encuentro el botón o el sidebar en este HTML");
+            }
         });
     </script>
 </body>

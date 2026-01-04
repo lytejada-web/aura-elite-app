@@ -1223,3 +1223,70 @@ footer {
 }
 
 .close-button:hover { color: #333; }
+/* =========================================
+   CORRECCIONES PARA MÓVIL (Responsive)
+   Añadir al final de styles.css
+========================================= */
+
+/* Cuando la pantalla sea de móvil o tablet pequeña (menos de 768px) */
+@media (max-width: 768px) {
+
+    /* 1. Arreglar el contenedor principal del Login/Registro */
+    /* Asegúrate de que tu contenedor principal tiene esta clase o adáptalo */
+    .login-container, 
+    .registro-container,
+    .main-container { 
+        flex-direction: column; /* Apilar los elementos verticalmente */
+        width: 95% !important; /* Usar casi todo el ancho disponible */
+        margin: 20px auto; /* Centrar y dar aire */
+        box-shadow: none; /* Opcional: quitar sombras pesadas en móvil */
+        height: auto !important; /* Dejar que crezca según el contenido */
+    }
+
+    /* 2. Ocultar la imagen lateral para dar espacio al formulario */
+    /* Busca la clase que tiene tu imagen de fondo lateral */
+    .image-side, 
+    .login-bg,
+    .register-bg {
+        display: none !important; /* Desaparece en móvil */
+        /* Opcional: si prefieres que se vea arriba pequeñita, usa esto en vez de 'none':
+        width: 100%;
+        height: 150px;
+        */
+    }
+
+    /* 3. Que el formulario ocupe todo el ancho */
+    .form-side,
+    .login-form-container {
+        width: 100% !important;
+        padding: 20px; /* Reducir un poco el padding si es muy grande */
+    }
+
+    /* 4. Ajustar títulos grandes */
+    h1, h2.form-title {
+        font-size: 1.8rem; /* Reducir tamaño de fuente */
+        text-align: center;
+    }
+}
+/* --- PARCHE PARA MÓVILES (Pegar al final de css/styles.css) --- */
+@media (max-width: 768px) {
+    /* 1. Ocultar la imagen lateral o el fondo decorativo */
+    .image-side, .login-bg, .register-bg, .split-screen-image {
+        display: none !important;
+    }
+
+    /* 2. Que el formulario ocupe toda la pantalla */
+    .login-container, .registro-container, .form-wrapper, .main-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        flex-direction: column !important;
+    }
+
+    /* 3. Ajustar márgenes internos */
+    .form-side, form {
+        width: 100% !important;
+        padding: 20px !important;
+    }
+}

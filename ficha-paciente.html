@@ -25,6 +25,7 @@
 </head>
 <body>
     <div id="app-container">
+
         <aside id="sidebar">
             <div class="logo-dashboard">
                 <a href="dashboard.html">
@@ -48,6 +49,9 @@
 
         <section id="main-content">
             <header id="topbar" style="justify-content: space-between;">
+                <button id="btn-menu-mobile" style="display: none;">
+                    ☰
+                </button>
                 <h2 id="lbl-nombre-paciente-header">Cargando Ficha...</h2>
                 <a href="clientes.html" class="btn" style="background:#95a5a6; color:white; text-decoration:none; padding: 10px 15px; border-radius: 5px;">← Volver a Clientes</a>
             </header>
@@ -102,29 +106,33 @@
             <span class="close-button">&times;</span>
             <h2>📂 Añadir al Historial</h2>
             <form id="record-form">
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 15px;">
                     <label>Fecha:</label>
-                    <input type="date" id="record-date" required style="width: 100%;">
+                    <input type="date" id="record-date" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 </div>
-                <div class="form-group">
-                    <label>Descripción / Título:</label>
-                    <input type="text" id="record-title" placeholder="Ej: Radiografía panorámica, Presupuesto..." required style="width: 100%;">
+    
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Título del Documento:</label>
+                    <input type="text" id="record-title" placeholder="Ej: Radiografía, Contrato..." required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 </div>
-                <div class="form-group">
-                    <label>Tipo de Registro:</label>
-                    <select id="record-type" style="width: 100%; padding: 10px;">
-                        <option value="📄 Documento">📄 Documento / PDF</option>
-                        <option value="🦷 Radiografía">🦷 Radiografía / Imagen</option>
-                        <option value="📝 Nota Clínica">📝 Nota Clínica</option>
-                        <option value="💰 Presupuesto">💰 Presupuesto</option>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Tipo:</label>
+                    <select id="record-type" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="Documento">📄 Documento</option>
+                    <option value="Imagen">🖼️ Imagen</option>
+                    <option value="Factura">💰 Factura</option>
+                    <option value="Otro">📂 Otro</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Simular Archivo (Opcional):</label>
-                    <input type="file" id="record-file" style="width: 100%;">
-                    <small style="color: #999;">(En esta demo, solo guardaremos el nombre del archivo)</small>
-                </div>
-                <button type="submit" class="btn btn-primary" style="margin-top: 15px; width: 100%;">Guardar Registro</button>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Enlace al Archivo (Drive/Dropbox):</label>
+                    <input type="url" id="record-link" placeholder="Pega aquí el link de Drive..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">* Sube el archivo a la carpeta del cliente en Drive y pega el enlace aquí para verlo siempre.</p>
+                    </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px;">💾 Guardar Registro</button>
             </form>
         </div>
     </div>
@@ -148,6 +156,45 @@
         // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
         // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
         // Pero de momento, con el nombre ya se ve el cambio de marca.
+        });
+    </script>
+    <script>
+        // SCRIPT DE EMERGENCIA PARA EL MENÚ
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Iniciando script de menú...");
+            
+            var btn = document.getElementById("btn-menu-mobile");
+            var sidebar = document.getElementById("sidebar");
+
+            if (btn && sidebar) {
+                // Forzamos un clon del botón para eliminar eventos viejos que fallen
+                var newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Evitar que otros clics interfieran
+                    
+                    if (sidebar.classList.contains("active")) {
+                        sidebar.classList.remove("active");
+                    } else {
+                        sidebar.classList.add("active");
+                    }
+                    console.log("Menú pulsado. Estado active:", sidebar.classList.contains("active"));
+                });
+
+                // Cerrar al tocar fuera
+                document.addEventListener("click", function(e) {
+                    if (window.innerWidth < 768 && 
+                        sidebar.classList.contains("active") && 
+                        !sidebar.contains(e.target) && 
+                        e.target !== newBtn) {
+                        sidebar.classList.remove("active");
+                    }
+                });
+            } else {
+                console.error("No encuentro el botón o el sidebar en este HTML");
+            }
         });
     </script>
 </body>

@@ -8,7 +8,6 @@
 </head>
 <body>
     <div id="app-container">
-        
         <aside id="sidebar">
             <div class="logo-dashboard">
                 <a href="dashboard.html">
@@ -32,8 +31,13 @@
 
         <section id="main-content">
             <header id="topbar" style="justify-content: space-between;">
-                <h2>Gestión de Ficheros (Google Drive)</h2>
-                <button id="btn-connect-drive" class="btn" style="background: #e67e22; color: white;">☁️ Conectar Google Drive</button>
+                <button id="btn-menu-mobile" style="display: none;">
+                    ☰
+                </button>
+                <h2>Gestión de Ficheros</h2>
+                <button id="btn-connect-drive-main" class="btn-primary" style="background-color: #f39c12;">
+                    🔗 Conectar mi Drive
+                </button>
             </header>
 
             <div class="content-area">
@@ -85,6 +89,45 @@
         // 3. (Opcional) Cambiar textos de la interfaz si quieres ir más allá
         // Por ejemplo, cambiar "Pacientes" por "Clientes" en el menú
         // Pero de momento, con el nombre ya se ve el cambio de marca.
+        });
+    </script>
+    <script>
+        // SCRIPT DE EMERGENCIA PARA EL MENÚ
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Iniciando script de menú...");
+            
+            var btn = document.getElementById("btn-menu-mobile");
+            var sidebar = document.getElementById("sidebar");
+
+            if (btn && sidebar) {
+                // Forzamos un clon del botón para eliminar eventos viejos que fallen
+                var newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Evitar que otros clics interfieran
+                    
+                    if (sidebar.classList.contains("active")) {
+                        sidebar.classList.remove("active");
+                    } else {
+                        sidebar.classList.add("active");
+                    }
+                    console.log("Menú pulsado. Estado active:", sidebar.classList.contains("active"));
+                });
+
+                // Cerrar al tocar fuera
+                document.addEventListener("click", function(e) {
+                    if (window.innerWidth < 768 && 
+                        sidebar.classList.contains("active") && 
+                        !sidebar.contains(e.target) && 
+                        e.target !== newBtn) {
+                        sidebar.classList.remove("active");
+                    }
+                });
+            } else {
+                console.error("No encuentro el botón o el sidebar en este HTML");
+            }
         });
     </script>
 </body>

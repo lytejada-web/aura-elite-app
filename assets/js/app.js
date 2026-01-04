@@ -2,7 +2,8 @@
  * assets/js/app.js - VERSIÓN NUBE CORREGIDA (Funcionalidad Completa)
  */
 
-const API_BASE_URL = 'http://localhost:3000/api';
+// const API_BASE_URL = 'http://localhost:3000/api'; // <--- BORRA ESTA O COMENTALA
+const API_BASE_URL = 'https://aura-elite-app.onrender.com/api'; // <--- PON ESTA
 
 // --- UTILIDAD: PETICIONES SEGURAS ---
 async function authFetch(endpoint, options = {}) {
@@ -173,7 +174,7 @@ function openPatientDrive(p) {
     }
 }
 
-// --- HISTORIAL (RECORDS) ---
+// --- HISTORIAL (CORREGIDO PARA ENLACES) ---
 async function loadPatientRecords(pid) {
     const tbody = document.getElementById('records-table-body'); if(!tbody) return;
     tbody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
@@ -185,11 +186,23 @@ async function loadPatientRecords(pid) {
 
     tbody.innerHTML = '';
     recs.forEach(r => {
+        // Determinamos si es un enlace o texto
+        const isLink = r.fileName && r.fileName.startsWith('http');
+        const fileContent = isLink 
+            ? `<a href="${r.fileName}" target="_blank" style="color:#2980b9; text-decoration:underline;">🔗 Abrir Archivo</a>` 
+            : `<small style="color:#666;">${r.fileName}</small>`;
+
         const row = document.createElement('tr');
-        row.innerHTML = `<td>${r.date}</td><td><strong>${r.title}</strong><br><small>📎 ${r.fileName}</small></td><td>${r.type}</td><td><button onclick="deleteRecord('${r._id}', '${pid}')" style="color:red;border:none;background:none;cursor:pointer;">🗑️</button></td>`;
+        row.innerHTML = `
+            <td>${r.date}</td>
+            <td><strong>${r.title}</strong><br>${fileContent}</td>
+            <td>${r.type}</td>
+            <td><button onclick="deleteRecord('${r._id}', '${pid}')" style="color:red;border:none;background:none;cursor:pointer;">🗑️</button></td>`;
         tbody.appendChild(row);
     });
-    document.getElementById('no-records-msg').style.display = recs.length ? 'none' : 'block';
+    
+    const msg = document.getElementById('no-records-msg');
+    if(msg) msg.style.display = recs.length ? 'none' : 'block';
 }
 
 function setupRecordModal(pid) {
@@ -198,19 +211,28 @@ function setupRecordModal(pid) {
     const form = document.getElementById('record-form');
     if (!modal || !btn) return;
     
-    btn.onclick = () => { form.reset(); document.getElementById('record-date').value = new Date().toISOString().split('T')[0]; modal.style.display = 'block'; };
-    modal.querySelector('.close-button').onclick = () => modal.style.display = 'none';
+    btn.onclick = () => { 
+        form.reset(); 
+        document.getElementById('record-date').value = new Date().toISOString().split('T')[0]; 
+        modal.style.display = 'block'; 
+    };
+    
+    const closeBtn = modal.querySelector('.close-button');
+    if(closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
     
     if(form) form.onsubmit = async (e) => {
         e.preventDefault(); 
-        const fInput = document.getElementById('record-file');
+        const linkInput = document.getElementById('record-link').value;
+        
         const rec = { 
             patientId: pid, 
             date: document.getElementById('record-date').value, 
             title: document.getElementById('record-title').value, 
             type: document.getElementById('record-type').value, 
-            fileName: fInput.files.length > 0 ? fInput.files[0].name : "Sin archivo" 
+            // AQUÍ GUARDAMOS EL ENLACE EN LUGAR DEL NOMBRE FALSO
+            fileName: linkInput || "Sin enlace" 
         };
+        
         await authFetch('/records', { method: 'POST', body: JSON.stringify(rec) });
         modal.style.display = 'none'; 
         loadPatientRecords(pid);
@@ -411,40 +433,88 @@ window.convertBudgetToInvoice = async (id) => {
 };
 
 // =========================================
-// 6. FICHEROS (DRIVE)
+// 6. FICHEROS (DRIVE & NUBE) - CORREGIDO
 // =========================================
 async function loadDrivePage() {
     const tbody = document.getElementById('files-table-body'); if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Cargando carpetas...</td></tr>';
     
     const res = await authFetch('/patients');
     if(!res) return;
     const patients = await res.json();
     
+    // Verificar si hay un Drive Principal conectado
+    const mainDrive = localStorage.getItem('aura_main_drive_link');
+    const btnConnect = document.getElementById('btn-connect-drive-main');
+    
+    if (btnConnect) {
+        if (mainDrive) {
+            btnConnect.innerText = "✅ Drive Conectado";
+            btnConnect.style.backgroundColor = "#27ae60"; // Verde
+            btnConnect.onclick = () => window.open(mainDrive, '_blank');
+        } else {
+            btnConnect.innerText = "🔗 Conectar mi Drive";
+            btnConnect.style.backgroundColor = "#f39c12"; // Naranja
+            btnConnect.onclick = setupMainDrive;
+        }
+    }
+
     tbody.innerHTML = '';
+    if(patients.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay clientes con carpetas.</td></tr>';
+        return;
+    }
+
     patients.forEach(p => {
         const hasLink = p.driveLink && p.driveLink.startsWith('http');
-        const linkDisplay = hasLink ? `<a href="${p.driveLink}" target="_blank" style="color:#3498db;">Abrir Carpeta</a>` : `<span style="color:#999;">Sin vincular</span>`;
+        // Si no tiene link propio, usamos el principal si existe
+        const finalLink = hasLink ? p.driveLink : (mainDrive || '#');
+        
+        const linkDisplay = hasLink 
+            ? `<a href="${p.driveLink}" target="_blank" style="color:#3498db; font-weight:bold;">Ver Carpeta</a>` 
+            : `<span style="color:#999; font-size:0.9rem;">Sin carpeta propia</span>`;
+        
         const actionBtns = hasLink 
-            ? `<button onclick="window.open('${p.driveLink}')" class="btn-action">📂</button> <button onclick="unlinkDriveFolder('${p._id}')" style="color:red;">❌</button>` 
-            : `<button onclick="linkDriveFolder('${p._id}', '${p.nombre}')" class="btn-action" style="color:green;">➕ Vincular</button>`;
+            ? `<button onclick="unlinkDriveFolder('${p._id}')" style="color:red; background:none; border:none; cursor:pointer;" title="Desvincular">❌</button>` 
+            : `<button onclick="linkDriveFolder('${p._id}', '${p.nombre}')" class="btn-action" style="color:green; border:1px solid green; padding:2px 8px; border-radius:4px;">➕ Vincular</button>`;
         
         const row = document.createElement('tr');
-        row.innerHTML = `<td><strong>${p.nombre}</strong></td><td>${hasLink ? '✅' : '⏳'}</td><td>${linkDisplay}</td><td>${actionBtns}</td>`;
+        row.innerHTML = `
+            <td><strong>${p.nombre}</strong></td>
+            <td>${hasLink ? '📂' : '⚪'}</td>
+            <td>${linkDisplay}</td>
+            <td style="text-align:center;">${actionBtns}</td>`;
         tbody.appendChild(row);
     });
 }
-function setupDrivePage() { /* Solo visual */ }
+
+function setupDrivePage() { 
+    // Inicializa lógica visual si es necesario
+    loadDrivePage();
+}
+
+// Función para configurar el botón naranja
+window.setupMainDrive = function() {
+    const link = prompt("📂 Pega aquí el enlace a tu carpeta PRINCIPAL de Google Drive:\n(Así tendrás un acceso rápido)");
+    if (link && link.startsWith('http')) {
+        localStorage.setItem('aura_main_drive_link', link);
+        alert("✅ Drive Principal conectado. Ahora el botón abrirá tu carpeta.");
+        loadDrivePage(); // Recargar para ver cambios
+    } else if (link) {
+        alert("⚠️ El enlace debe empezar por http:// o https://");
+    }
+};
 
 window.linkDriveFolder = async function(id, nombre) {
-    const l = prompt(`📂 Pega el link de Google Drive para ${nombre}:`);
+    const l = prompt(`📂 Pega el link de la carpeta de ${nombre}:`);
     if (l) {
         await authFetch(`/patients/${id}`, { method: 'PUT', body: JSON.stringify({ driveLink: l }) });
         loadDrivePage();
     }
 };
+
 window.unlinkDriveFolder = async function(id) {
-    if(confirm("¿Desvincular?")) {
+    if(confirm("¿Desvincular carpeta?")) {
         await authFetch(`/patients/${id}`, { method: 'PUT', body: JSON.stringify({ driveLink: '' }) });
         loadDrivePage();
     }
@@ -491,29 +561,90 @@ function setupPremiumModal() {
 }
 
 // =========================================
-// 8. DASHBOARD & ROUTER
+// NUEVA FUNCIÓN CORREGIDA: ESTADÍSTICAS DASHBOARD
 // =========================================
-async function loadDashboardPage() {
-    document.getElementById('current-date-display').innerText = new Date().toLocaleDateString();
-    const resInv = await authFetch('/invoices');
-    const resPat = await authFetch('/patients');
-    if(!resInv || !resPat) return;
-    const inv = await resInv.json();
-    const pat = await resPat.json();
-    
-    const total = inv.filter(i => i.type==='Factura' && i.date.startsWith(new Date().toISOString().slice(0,7))).reduce((s,i)=>s+i.amount,0);
-    document.getElementById('dash-ingresos-mes').innerText = `$${total}`;
-    document.getElementById('dash-total-pacientes').innerText = pat.length;
+async function updateDashboardStats() {
+    try {
+        // 1. Contar Clientes (Usamos authFetch para asegurar la conexión)
+        const resClients = await authFetch('/patients');
+        if (resClients && resClients.ok) {
+            const clients = await resClients.json();
+            const counterElement = document.getElementById('dash-total-pacientes');
+            if (counterElement) {
+                counterElement.innerText = clients.length || 0;
+            }
+        }
+
+        // 2. Sumar Facturas del Mes Actual
+        const resInvoices = await authFetch('/invoices');
+        if (resInvoices && resInvoices.ok) {
+            const invoices = await resInvoices.json();
+            
+            // Fechas de hoy
+            const ahora = new Date();
+            const mesActual = ahora.getMonth();
+            const anioActual = ahora.getFullYear();
+
+            const totalMes = invoices.reduce((acc, inv) => {
+                // Convertimos la fecha de la factura
+                const fechaInv = new Date(inv.date);
+                
+                // CONDICIÓN: Que sea 'Factura' (no Presupuesto) y que sea de ESTE mes
+                // CORRECCIÓN: Usamos 'inv.amount' en vez de 'inv.total'
+                if (inv.type === 'Factura' && fechaInv.getMonth() === mesActual && fechaInv.getFullYear() === anioActual) {
+                    return acc + (parseFloat(inv.amount) || 0);
+                }
+                return acc;
+            }, 0);
+
+            const moneyElement = document.getElementById('dash-ingresos-mes');
+            if (moneyElement) {
+                // Formateamos a Euros (o cambia a USD si prefieres)
+                moneyElement.innerText = totalMes.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }); 
+            }
+        }
+
+    } catch (error) {
+        console.error("Error actualizando dashboard:", error);
+    }
 }
 
-function router() {
-    initializeApp();
+// =========================================
+// ROUTER ACTUALIZADO (PARA QUE LLAME A LA FUNCIÓN)
+// =========================================
+async function router() {
+    // 1. Configuración inicial
+    if (typeof initializeApp === 'function') initializeApp();
+    if (typeof setupMobileMenu === 'function') setupMobileMenu();
+
     const path = window.location.pathname;
-    if (path.includes('dashboard') || path.endsWith('index.html') || path === '/') { loadDashboardPage(); setupModalListeners(); }
-    else if (path.includes('clientes')) { loadPatientsPage(); setupSearchListener(); setupPatientModalListeners(); } 
-    else if (path.includes('ficha')) { loadPatientDetailsPage(); }
-    else if (path.includes('calendario')) { loadCalendarPage(); setupModalListeners(); }
-    else if (path.includes('facturas')) { loadInvoicesPage(); setupInvoiceModal(); }
-    else if (path.includes('ficheros')) { setupDrivePage(); loadDrivePage(); }
+
+    // 2. Decidir qué cargar según la página
+    if (path.includes('dashboard') || path.endsWith('index.html') || path === '/') {
+        // Cargar lógica del dashboard...
+        if (typeof loadDashboardPage === 'function') loadDashboardPage();
+        
+        // ¡AQUÍ ESTÁ LA CLAVE! LLAMAMOS A LA MATEMÁTICA:
+        updateDashboardStats(); 
+    } 
+    else if (path.includes('clientes')) { 
+        if (typeof loadPatientsPage === 'function') loadPatientsPage();
+        if (typeof setupSearchListener === 'function') setupSearchListener();
+        if (typeof setupPatientModalListeners === 'function') setupPatientModalListeners();
+    } 
+    else if (path.includes('calendario')) { 
+        if (typeof loadCalendarPage === 'function') loadCalendarPage();
+        if (typeof setupModalListeners === 'function') setupModalListeners();
+    }
+    else if (path.includes('facturas')) { 
+        if (typeof loadInvoicesPage === 'function') loadInvoicesPage();
+        if (typeof setupInvoiceModal === 'function') setupInvoiceModal();
+    }
+    else if (path.includes('ficheros')) { 
+        if (typeof setupDrivePage === 'function') setupDrivePage();
+        if (typeof loadDrivePage === 'function') loadDrivePage();
+    }
 }
+
+// Ejecutar cuando carga la web
 document.addEventListener('DOMContentLoaded', router);
