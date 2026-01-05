@@ -1,6 +1,6 @@
 /**
- * assets/js/app.js - VERSIÓN MAESTRA FINAL
- * Incluye: Datos Fiscales (RIF/Dirección), IVA 16% en Facturas, Drive Inteligente y Persistencia.
+ * assets/js/app.js - VERSIÓN FINAL CON "MEMORIA PARALELA"
+ * Soluciona: Guardado de RIF y Dirección aunque la Nube no los acepte.
  */
 
 // const API_BASE_URL = 'http://localhost:3000/api'; 
@@ -11,7 +11,8 @@ const STORAGE_KEYS = {
     TOKEN: 'aura_elite_token',
     USER: 'aura_elite_user',
     MAIN_DRIVE: 'aura_main_drive_link',
-    BIZ_PROFILE: 'aura_business_profile' // Clave para tus datos fiscales (Mi Perfil)
+    BIZ_PROFILE: 'aura_business_profile',
+    PATIENTS_META: 'aura_patients_extra_data' // <--- AQUÍ GUARDARÁ RIF Y DIRECCIÓN
 };
 
 // --- UTILIDAD: PETICIONES SEGURAS ---
@@ -38,9 +39,30 @@ async function authFetch(endpoint, options = {}) {
 function secureLogout() {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
-    // Mantenemos Drive y Perfil de Negocio guardados
+    // NO borramos PATIENTS_META para no perder los RIFs
     window.location.href = 'login.html';
 }
+
+// --- GESTOR DE MEMORIA PARALELA (SIDEBAR DB) ---
+// Estas funciones guardan lo que la Nube rechaza
+const MetaDB = {
+    getAll: () => JSON.parse(localStorage.getItem(STORAGE_KEYS.PATIENTS_META) || '{}'),
+    save: (id, data) => {
+        const db = MetaDB.getAll();
+        // Mezclamos lo que había con lo nuevo
+        db[id] = { ...db[id], ...data }; 
+        localStorage.setItem(STORAGE_KEYS.PATIENTS_META, JSON.stringify(db));
+    },
+    get: (id) => {
+        const db = MetaDB.getAll();
+        return db[id] || {};
+    },
+    delete: (id) => {
+        const db = MetaDB.getAll();
+        delete db[id];
+        localStorage.setItem(STORAGE_KEYS.PATIENTS_META, JSON.stringify(db));
+    }
+};
 
 // --- CATALOGO ---
 const SERVICE_CATALOG = {
@@ -88,6 +110,12 @@ async function loadPatientsPage(searchTerm = "") {
     if (!res) return;
     let patients = await res.json();
 
+    // Enriquecer con datos locales (RIF)
+    patients = patients.map(p => {
+        const meta = MetaDB.get(p._id);
+        return { ...p, ...meta }; // Mezcla datos nube + datos locales
+    });
+
     if (searchTerm.trim() !== "") {
         const term = searchTerm.toLowerCase();
         patients = patients.filter(p => p.nombre.toLowerCase().includes(term) || p.telefono.includes(term) || (p.rif && p.rif.toLowerCase().includes(term)));
@@ -132,18 +160,25 @@ function setupPatientModalListeners() {
     
     if(form) form.onsubmit = async (e) => {
         e.preventDefault();
-        // CAPTURA DE DATOS COMPLETOS (RIF Y DIRECCIÓN)
+        // CAPTURA DE DATOS
         const nombre = document.getElementById('patient-name').value; 
         const rif = document.getElementById('patient-rif').value;          
         const address = document.getElementById('patient-address').value;  
         const telefono = document.getElementById('patient-phone').value;
         
+        // 1. Guardar en NUBE (Solo nombre y teléfono)
         const res = await authFetch('/patients', { 
             method: 'POST', 
-            body: JSON.stringify({ nombre, rif, address, telefono, driveLink: '' }) 
+            body: JSON.stringify({ nombre, telefono, driveLink: '' }) 
         });
         
         if (res && res.ok) { 
+            // 2. Guardar en MEMORIA PARALELA (RIF y Dirección usando el ID nuevo)
+            const newPatient = await res.json(); // La nube nos devuelve el ID creado
+            if (newPatient && newPatient._id) {
+                MetaDB.save(newPatient._id, { rif, address });
+            }
+
             modal.style.display = "none"; 
             loadPatientsPage(); 
             alert("✅ Cliente registrado correctamente.");
@@ -162,8 +197,13 @@ async function loadPatientDetailsPage() {
     const res = await authFetch('/patients');
     if (!res) return;
     const patients = await res.json();
-    const p = patients.find(pat => pat._id === pid);
+    let p = patients.find(pat => pat._id === pid);
     if (!p) return;
+
+    // --- FUSIÓN DE DATOS (Nube + Local) ---
+    const meta = MetaDB.get(pid);
+    p = { ...p, ...meta }; // Ahora 'p' tiene rif y address aunque la nube no los tenga
+    // --------------------------------------
 
     // Rellenar Ficha
     const lblHeader = document.getElementById('lbl-nombre-paciente-header');
@@ -199,11 +239,10 @@ async function loadPatientDetailsPage() {
     setupRecordModal(pid);
 }
 
-// --- FUNCIÓN DE EDICIÓN COMPLETA (CORREGIDA) ---
+// --- FUNCIÓN DE EDICIÓN (GUARDA EN DOS SITIOS) ---
 window.editPatientData = async function(id, currentData) {
-    // Pedimos datos uno a uno (simple pero efectivo)
     const newPhone = prompt("📞 Nuevo Teléfono:", currentData.telefono);
-    if (newPhone === null) return; // Si cancela, no hacemos nada
+    if (newPhone === null) return; 
 
     const newRif = prompt("🆔 Nuevo RIF:", currentData.rif || "");
     if (newRif === null) return;
@@ -211,22 +250,24 @@ window.editPatientData = async function(id, currentData) {
     const newAddress = prompt("📍 Nueva Dirección Fiscal:", currentData.address || "");
     if (newAddress === null) return;
     
-    // Enviamos TODO al servidor
+    // 1. Actualizar NUBE (Teléfono)
     await authFetch(`/patients/${id}`, { 
         method: 'PUT', 
-        body: JSON.stringify({ 
-            telefono: newPhone, 
-            rif: newRif, 
-            address: newAddress 
-        }) 
+        body: JSON.stringify({ telefono: newPhone }) 
     });
     
-    location.reload(); // Recargamos para ver cambios
+    // 2. Actualizar LOCAL (RIF y Dirección)
+    MetaDB.save(id, { rif: newRif, address: newAddress });
+
+    location.reload(); 
 }
 
 window.deleteCurrentPatient = async function(id) {
     if(!confirm("⚠️ ¿Estás seguro de eliminar este cliente y todo su historial?")) return;
+    
     await authFetch(`/patients/${id}`, { method: 'DELETE' });
+    MetaDB.delete(id); // Borramos también de la memoria local
+
     window.location.href = 'clientes.html';
 };
 
@@ -378,7 +419,10 @@ async function loadInvoicesPage() {
     if(!resInv || !resPat) return;
     
     CACHED_INVOICES = await resInv.json();
-    const patients = await resPat.json();
+    let patients = await resPat.json();
+
+    // Enriquecer pacientes con datos locales para el listado también
+    patients = patients.map(p => ({ ...p, ...MetaDB.get(p._id) }));
 
     tbody.innerHTML = ''; 
     let totalBilled = 0;
@@ -433,24 +477,28 @@ window.printInvoice = async function(id) {
     const docData = CACHED_INVOICES.find(d => d._id === id);
     if(!docData) return;
 
-    // Obtener datos del Cliente
+    // Obtener datos del Cliente (MEZCLADOS)
     let client = { nombre: "Cliente General", rif: "N/A", address: "N/A", telefono: "" };
     try {
         const res = await authFetch('/patients');
         const patients = await res.json();
-        const p = patients.find(x => x._id === docData.patientId);
-        if(p) client = { ...p };
+        let p = patients.find(x => x._id === docData.patientId);
+        if(p) {
+            // AQUÍ LA CLAVE: Mezclamos con los datos locales
+            const meta = MetaDB.get(p._id);
+            client = { ...p, ...meta };
+        }
     } catch(e) {}
 
-    // Obtener TU Perfil de Negocio (guardado en LocalStorage)
+    // Obtener TU Perfil de Negocio
     const myProfile = JSON.parse(localStorage.getItem(STORAGE_KEYS.BIZ_PROFILE) || '{}');
     const myName = myProfile.name || "AURA ELITE";
     const myRif = myProfile.rif || "J-00000000-0";
     const myAddress = myProfile.address || "Dirección no configurada";
 
     // Cálculos Matemáticos (IVA 16%)
-    const baseImponible = parseFloat(docData.amount); // Asumimos que lo guardado es la base
-    const rateIVA = 0.16; // 16%
+    const baseImponible = parseFloat(docData.amount); 
+    const rateIVA = 0.16; 
     const montoIVA = baseImponible * rateIVA;
     const totalPagar = baseImponible + montoIVA;
 
@@ -458,83 +506,52 @@ window.printInvoice = async function(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // 1. CABECERA (TUS DATOS)
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text(myName, 14, 20); // Tu nombre empresa
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`RIF: ${myRif}`, 14, 26);
-    // Dividir dirección larga en líneas
+    // 1. CABECERA
+    doc.setFillColor(21, 67, 96); 
+    doc.rect(0, 0, 210, 35, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18); doc.setFont("helvetica", "bold");
+    doc.text(myName, 14, 15);
+    doc.setFontSize(10); doc.setFont("helvetica", "normal");
+    doc.text(`RIF: ${myRif}`, 14, 22);
     const splitAddress = doc.splitTextToSize(myAddress, 100);
-    doc.text(splitAddress, 14, 32);
+    doc.text(splitAddress, 14, 28);
 
-    // 2. DATOS DE LA FACTURA (Derecha)
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(200, 0, 0); // Rojo para destacar
-    doc.text(`${docData.type.toUpperCase()} N° ${docData.number}`, 120, 20);
-    
-    doc.setTextColor(0, 0, 0); // Negro
-    doc.setFontSize(10);
+    // 2. DATOS FACTURA
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.setTextColor(200, 0, 0);
+    doc.text(`${docData.type.toUpperCase()} N° ${docData.number}`, 130, 20);
+    doc.setFontSize(10); doc.setTextColor(0,0,0); doc.setFont("helvetica", "normal");
+    doc.text(`Fecha: ${docData.date}`, 130, 28);
+
+    // 3. CLIENTE
+    doc.setDrawColor(200); doc.rect(14, 45, 182, 25);
+    doc.setFontSize(9); doc.setFont("helvetica", "bold");
+    doc.text("DATOS DEL CLIENTE:", 16, 50);
     doc.setFont("helvetica", "normal");
-    doc.text(`Fecha de Emisión: ${docData.date}`, 120, 28);
-    doc.text(`N° Control: 00-${Math.floor(Math.random() * 999999)}`, 120, 34); // Simulado
+    doc.text(`Razón Social: ${client.nombre}`, 16, 56);
+    doc.text(`RIF/CI: ${client.rif || "No registrado"}`, 120, 56);
+    doc.text(`Dirección: ${client.address || "No registrada"}`, 16, 62);
+    doc.text(`Teléfono: ${client.telefono}`, 120, 62);
 
-    // 3. DATOS DEL CLIENTE (Caja)
-    doc.setDrawColor(0);
-    doc.rect(14, 50, 180, 25); // Caja borde
-    
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text("DATOS DEL CLIENTE:", 16, 55);
-    
-    doc.setFont("helvetica", "normal");
-    doc.text(`Razón Social: ${client.nombre}`, 16, 62);
-    doc.text(`RIF/CI: ${client.rif || "No registrado"}`, 120, 62);
-    doc.text(`Dirección: ${client.address || "No registrada"}`, 16, 68);
-    doc.text(`Teléfono: ${client.telefono}`, 120, 68);
-
-    // 4. TABLA DE ITEMS
-    const tableBody = docData.items.map(item => [
-        item.description, 
-        `$${parseFloat(item.price).toFixed(2)}`
-    ]);
-    
+    // 4. TABLA
+    const tableBody = docData.items.map(item => [item.description, `$${parseFloat(item.price).toFixed(2)}`]);
     doc.autoTable({
-        startY: 80,
-        head: [['Concepto / Descripción', 'Monto Base']],
+        startY: 75,
+        head: [['Descripción', 'Monto']],
         body: tableBody,
-        theme: 'plain', // Estilo limpio tipo factura
-        styles: { fontSize: 10, cellPadding: 3 },
-        headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', lineColor: 200, lineWidth: 0.1 },
-        bodyStyles: { lineColor: 200, lineWidth: 0.1 },
-        columnStyles: { 1: { halign: 'right', cellWidth: 40 } }
+        theme: 'grid',
+        headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' },
+        columnStyles: { 1: { halign: 'right' } }
     });
 
-    // 5. TOTALES (Al final de la tabla)
+    // 5. TOTALES
     const finalY = doc.lastAutoTable.finalY + 5;
-    
-    // Cuadro de totales
-    doc.rect(120, finalY, 74, 25);
-    
     doc.setFontSize(10);
-    doc.text("Base Imponible:", 122, finalY + 6);
-    doc.text(`$${baseImponible.toFixed(2)}`, 190, finalY + 6, { align: "right" });
-    
-    doc.text("I.V.A. (16%):", 122, finalY + 12);
-    doc.text(`$${montoIVA.toFixed(2)}`, 190, finalY + 12, { align: "right" });
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text("TOTAL A PAGAR:", 122, finalY + 20);
-    doc.text(`$${totalPagar.toFixed(2)}`, 190, finalY + 20, { align: "right" });
-
-    // Pie de página
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.text("Sin tachaduras ni enmendaduras.", 14, 280);
+    doc.text(`Base Imponible: $${baseImponible.toFixed(2)}`, 190, finalY + 6, { align: "right" });
+    doc.text(`I.V.A. (16%): $${montoIVA.toFixed(2)}`, 190, finalY + 12, { align: "right" });
+    doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.text(`TOTAL A PAGAR: $${totalPagar.toFixed(2)}`, 190, finalY + 20, { align: "right" });
 
     doc.save(`${docData.number}_${client.nombre}.pdf`);
 };
