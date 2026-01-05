@@ -1,13 +1,14 @@
 /**
- * assets/js/app.js - VERSIÓN NUBE CORREGIDA (Funcionalidad Completa)
+ * assets/js/app.js - VERSIÓN MAESTRA REPARADA
+ * Incluye corrección para Ficha de Paciente y Menú Móvil
  */
 
-// const API_BASE_URL = 'http://localhost:3000/api'; // <--- BORRA ESTA O COMENTALA
-const API_BASE_URL = 'https://aura-elite-app.onrender.com/api'; // <--- PON ESTA
+// const API_BASE_URL = 'http://localhost:3000/api'; 
+const API_BASE_URL = 'https://aura-elite-app.onrender.com/api'; 
 
 // --- UTILIDAD: PETICIONES SEGURAS ---
 async function authFetch(endpoint, options = {}) {
-    if (typeof AUTH_KEYS === 'undefined') return null; // Seguridad
+    if (typeof AUTH_KEYS === 'undefined') return null; 
     const token = localStorage.getItem(AUTH_KEYS.TOKEN);
     if (!token) { window.location.href = 'login.html'; return; }
 
@@ -50,7 +51,7 @@ function initializeApp() {
 }
 
 // =========================================
-// 1. PACIENTES
+// 1. PACIENTES (LISTADO)
 // =========================================
 async function loadPatientsPage(searchTerm = "") {
     const tableBody = document.querySelector('.data-table tbody'); if (!tableBody) return;
@@ -127,9 +128,14 @@ async function loadPatientDetailsPage() {
     if (!p) return;
 
     // Rellenar datos
-    document.getElementById('lbl-nombre-paciente-header').innerText = `Ficha de: ${p.nombre}`; 
-    document.getElementById('lbl-nombre-paciente').innerText = p.nombre; 
-    document.getElementById('lbl-telefono').innerText = p.telefono;
+    const lblHeader = document.getElementById('lbl-nombre-paciente-header');
+    if(lblHeader) lblHeader.innerText = `Ficha de: ${p.nombre}`; 
+    
+    const lblNombre = document.getElementById('lbl-nombre-paciente');
+    if(lblNombre) lblNombre.innerText = p.nombre; 
+    
+    const lblTel = document.getElementById('lbl-telefono');
+    if(lblTel) lblTel.innerText = p.telefono;
     
     // Botones
     const btnWa = document.getElementById('link-whatsapp-ficha'); 
@@ -164,9 +170,10 @@ window.deleteCurrentPatient = async function(id) {
 };
 
 function openPatientDrive(p) {
-    if (p.driveLink && p.driveLink.startsWith('http')) window.open(p.driveLink, '_blank');
-    else {
-        const l = prompt(`Pegue el link de Drive de ${p.nombre}:`);
+    if (p.driveLink && p.driveLink.startsWith('http')) {
+        window.open(p.driveLink, '_blank');
+    } else {
+        const l = prompt(`📂 Pega el link de la carpeta de Drive de ${p.nombre}:`);
         if (l) {
             authFetch(`/patients/${p._id}`, { method: 'PUT', body: JSON.stringify({ driveLink: l }) })
             .then(() => window.open(l, '_blank'));
@@ -174,7 +181,7 @@ function openPatientDrive(p) {
     }
 }
 
-// --- HISTORIAL (CORREGIDO PARA ENLACES) ---
+// --- HISTORIAL ---
 async function loadPatientRecords(pid) {
     const tbody = document.getElementById('records-table-body'); if(!tbody) return;
     tbody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
@@ -229,7 +236,6 @@ function setupRecordModal(pid) {
             date: document.getElementById('record-date').value, 
             title: document.getElementById('record-title').value, 
             type: document.getElementById('record-type').value, 
-            // AQUÍ GUARDAMOS EL ENLACE EN LUGAR DEL NOMBRE FALSO
             fileName: linkInput || "Sin enlace" 
         };
         
@@ -275,7 +281,6 @@ function setupModalListeners() {
     if(btnOpen && modal) {
         btnOpen.onclick = async (e) => { 
             if(e) e.preventDefault(); 
-            // 1. CARGAR PACIENTES EN EL SELECT (LA CLAVE QUE FALTABA)
             selPac.innerHTML = '<option>Cargando...</option>';
             const res = await authFetch('/patients');
             const pts = await res.json();
@@ -329,7 +334,6 @@ async function loadInvoicesPage() {
         
         if (doc.type === 'Factura') totalBilled += doc.amount;
 
-        // Botón WhatsApp (RECUPERADO)
         let waBtn = '';
         if (pPhone) {
             let msg = `Hola ${pName}, adjunto documento ${doc.number} por valor de $${doc.amount}.`;
@@ -433,7 +437,7 @@ window.convertBudgetToInvoice = async (id) => {
 };
 
 // =========================================
-// 6. FICHEROS (DRIVE & NUBE) - CORREGIDO
+// 6. FICHEROS (DRIVE & NUBE)
 // =========================================
 async function loadDrivePage() {
     const tbody = document.getElementById('files-table-body'); if (!tbody) return;
@@ -443,18 +447,17 @@ async function loadDrivePage() {
     if(!res) return;
     const patients = await res.json();
     
-    // Verificar si hay un Drive Principal conectado
     const mainDrive = localStorage.getItem('aura_main_drive_link');
     const btnConnect = document.getElementById('btn-connect-drive-main');
     
     if (btnConnect) {
         if (mainDrive) {
             btnConnect.innerText = "✅ Drive Conectado";
-            btnConnect.style.backgroundColor = "#27ae60"; // Verde
+            btnConnect.style.backgroundColor = "#27ae60"; 
             btnConnect.onclick = () => window.open(mainDrive, '_blank');
         } else {
             btnConnect.innerText = "🔗 Conectar mi Drive";
-            btnConnect.style.backgroundColor = "#f39c12"; // Naranja
+            btnConnect.style.backgroundColor = "#f39c12"; 
             btnConnect.onclick = setupMainDrive;
         }
     }
@@ -467,9 +470,6 @@ async function loadDrivePage() {
 
     patients.forEach(p => {
         const hasLink = p.driveLink && p.driveLink.startsWith('http');
-        // Si no tiene link propio, usamos el principal si existe
-        const finalLink = hasLink ? p.driveLink : (mainDrive || '#');
-        
         const linkDisplay = hasLink 
             ? `<a href="${p.driveLink}" target="_blank" style="color:#3498db; font-weight:bold;">Ver Carpeta</a>` 
             : `<span style="color:#999; font-size:0.9rem;">Sin carpeta propia</span>`;
@@ -488,21 +488,15 @@ async function loadDrivePage() {
     });
 }
 
-function setupDrivePage() { 
-    // Inicializa lógica visual si es necesario
-    loadDrivePage();
-}
+function setupDrivePage() { loadDrivePage(); }
 
-// Función para configurar el botón naranja
 window.setupMainDrive = function() {
-    const link = prompt("📂 Pega aquí el enlace a tu carpeta PRINCIPAL de Google Drive:\n(Así tendrás un acceso rápido)");
+    const link = prompt("📂 Pega aquí el enlace a tu carpeta PRINCIPAL de Google Drive:");
     if (link && link.startsWith('http')) {
         localStorage.setItem('aura_main_drive_link', link);
-        alert("✅ Drive Principal conectado. Ahora el botón abrirá tu carpeta.");
-        loadDrivePage(); // Recargar para ver cambios
-    } else if (link) {
-        alert("⚠️ El enlace debe empezar por http:// o https://");
-    }
+        alert("✅ Drive Principal conectado.");
+        loadDrivePage();
+    } else if (link) { alert("⚠️ El enlace debe empezar por http"); }
 };
 
 window.linkDriveFolder = async function(id, nombre) {
@@ -521,76 +515,26 @@ window.unlinkDriveFolder = async function(id) {
 };
 
 // =========================================
-// MÓDULO 7: PREMIUM (MODAL)
-// =========================================
-function setupPremiumModal() {
-    const modal = document.getElementById('premium-modal');
-    const btnOpen = document.getElementById('btn-go-premium');
-    const btnApply = document.getElementById('btn-apply-coupon');
-    const form = document.getElementById('payment-form');
-    
-    if (!modal || !btnOpen) return;
-
-    btnOpen.onclick = (e) => { e.preventDefault(); modal.style.display = "block"; };
-    
-    const closeBtn = modal.querySelector('.close-button');
-    if(closeBtn) closeBtn.onclick = () => modal.style.display = "none";
-
-    if (btnApply) {
-        btnApply.onclick = () => {
-            const code = document.getElementById('coupon-code').value.trim().toUpperCase();
-            if (code === "DENTAL2025") {
-                document.getElementById('discount-row').style.display = 'flex';
-                document.getElementById('price-total').innerText = `$23.99`;
-                alert("🎉 Cupón aplicado!");
-            } else { alert("❌ Cupón no válido."); }
-        };
-    }
-    if (form) {
-        form.onsubmit = (e) => {
-            e.preventDefault(); 
-            const btn = form.querySelector('button[type="submit"]');
-            btn.innerText = "Procesando...";
-            setTimeout(() => {
-                alert("¡Bienvenido a Premium! (Simulación)");
-                modal.style.display = "none";
-                btnOpen.style.display = "none";
-            }, 2000);
-        };
-    }
-}
-
-// =========================================
-// NUEVA FUNCIÓN CORREGIDA: ESTADÍSTICAS DASHBOARD
+// ESTADÍSTICAS DASHBOARD
 // =========================================
 async function updateDashboardStats() {
     try {
-        // 1. Contar Clientes (Usamos authFetch para asegurar la conexión)
         const resClients = await authFetch('/patients');
         if (resClients && resClients.ok) {
             const clients = await resClients.json();
             const counterElement = document.getElementById('dash-total-pacientes');
-            if (counterElement) {
-                counterElement.innerText = clients.length || 0;
-            }
+            if (counterElement) counterElement.innerText = clients.length || 0;
         }
 
-        // 2. Sumar Facturas del Mes Actual
         const resInvoices = await authFetch('/invoices');
         if (resInvoices && resInvoices.ok) {
             const invoices = await resInvoices.json();
-            
-            // Fechas de hoy
             const ahora = new Date();
             const mesActual = ahora.getMonth();
             const anioActual = ahora.getFullYear();
 
             const totalMes = invoices.reduce((acc, inv) => {
-                // Convertimos la fecha de la factura
                 const fechaInv = new Date(inv.date);
-                
-                // CONDICIÓN: Que sea 'Factura' (no Presupuesto) y que sea de ESTE mes
-                // CORRECCIÓN: Usamos 'inv.amount' en vez de 'inv.total'
                 if (inv.type === 'Factura' && fechaInv.getMonth() === mesActual && fechaInv.getFullYear() === anioActual) {
                     return acc + (parseFloat(inv.amount) || 0);
                 }
@@ -598,33 +542,52 @@ async function updateDashboardStats() {
             }, 0);
 
             const moneyElement = document.getElementById('dash-ingresos-mes');
-            if (moneyElement) {
-                // Formateamos a Euros (o cambia a USD si prefieres)
-                moneyElement.innerText = totalMes.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }); 
-            }
+            if (moneyElement) moneyElement.innerText = totalMes.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }); 
         }
+    } catch (error) { console.error("Error dashboard:", error); }
+}
 
-    } catch (error) {
-        console.error("Error actualizando dashboard:", error);
+// =========================================
+// MENÚ MÓVIL (RECUPERADO)
+// =========================================
+function setupMobileMenu() {
+    const btnMenu = document.getElementById('btn-menu-mobile');
+    const sidebar = document.getElementById('sidebar');
+
+    if (btnMenu && sidebar) {
+        // Aseguramos que limpiamos eventos anteriores
+        const newBtn = btnMenu.cloneNode(true);
+        btnMenu.parentNode.replaceChild(newBtn, btnMenu);
+
+        newBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && 
+                sidebar.classList.contains('active') && 
+                !sidebar.contains(e.target) && 
+                e.target !== newBtn) {
+                sidebar.classList.remove('active');
+            }
+        });
     }
 }
 
 // =========================================
-// ROUTER ACTUALIZADO (PARA QUE LLAME A LA FUNCIÓN)
+// ROUTER PRINCIPAL (CORREGIDO)
 // =========================================
 async function router() {
-    // 1. Configuración inicial
     if (typeof initializeApp === 'function') initializeApp();
-    if (typeof setupMobileMenu === 'function') setupMobileMenu();
+    
+    // Configurar menú móvil siempre
+    setupMobileMenu();
 
     const path = window.location.pathname;
 
-    // 2. Decidir qué cargar según la página
-    if (path.includes('dashboard') || path.endsWith('index.html') || path === '/') {
-        // Cargar lógica del dashboard...
-        if (typeof loadDashboardPage === 'function') loadDashboardPage();
-        
-        // ¡AQUÍ ESTÁ LA CLAVE! LLAMAMOS A LA MATEMÁTICA:
+    if (path.includes('dashboard') || path.endsWith('index.html') || path === '/' || path.endsWith('/')) {
         updateDashboardStats(); 
     } 
     else if (path.includes('clientes')) { 
@@ -632,6 +595,11 @@ async function router() {
         if (typeof setupSearchListener === 'function') setupSearchListener();
         if (typeof setupPatientModalListeners === 'function') setupPatientModalListeners();
     } 
+    // --- ¡AQUÍ ESTABA EL FALLO! SECCIÓN NUEVA PARA FICHA ---
+    else if (path.includes('ficha') || path.includes('paciente')) {
+        if (typeof loadPatientDetailsPage === 'function') loadPatientDetailsPage();
+    }
+    // --------------------------------------------------------
     else if (path.includes('calendario')) { 
         if (typeof loadCalendarPage === 'function') loadCalendarPage();
         if (typeof setupModalListeners === 'function') setupModalListeners();
@@ -646,5 +614,4 @@ async function router() {
     }
 }
 
-// Ejecutar cuando carga la web
 document.addEventListener('DOMContentLoaded', router);
