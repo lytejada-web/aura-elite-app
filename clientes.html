@@ -70,15 +70,23 @@
             <span class="close-button">&times;</span>
             <h2 style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">👤 Registrar Nuevo Cliente</h2>
             <form id="patient-form">
-                <div class="form-group">
-                    <label style="font-weight: bold;">Nombre Completo:</label>
-                    <input type="text" id="patient-name" required placeholder="Ej: Juan Pérez" style="width: 100%; padding: 10px;">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Nombre Completo / Razón Social:</label>
+                    <input type="text" id="patient-name" placeholder="Ej: Inversiones Pérez, C.A." required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 </div>
-                <div class="form-group">
-                    <label style="font-weight: bold;">Teléfono:</label>
-                    <input type="text" id="patient-phone" placeholder="Ej: 04141234567" style="width: 100%; padding: 10px;">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>RIF / Cédula:</label>
+                    <input type="text" id="patient-rif" placeholder="Ej: J-12345678-0" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 </div>
-                <button type="submit" class="btn btn-primary" style="margin-top: 25px; width: 100%;">💾 Guardar Cliente</button>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Dirección Fiscal:</label>
+                    <textarea id="patient-address" rows="2" placeholder="Ej: Av. Bolívar, Edif. Central, Piso 1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Teléfono (WhatsApp):</label>
+                    <input type="tel" id="patient-phone" placeholder="Ej: +58 414 1234567" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px;">💾 Guardar Cliente</button>
             </form>
         </div>
     </div>

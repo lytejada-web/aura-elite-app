@@ -137,10 +137,23 @@ function setupPatientModalListeners() {
     
     if(form) form.onsubmit = async (e) => {
         e.preventDefault();
+        // CAPTURAMOS LOS NUEVOS CAMPOS
         const nombre = document.getElementById('patient-name').value; 
+        const rif = document.getElementById('patient-rif').value;          // <--- NUEVO
+        const address = document.getElementById('patient-address').value;  // <--- NUEVO
         const telefono = document.getElementById('patient-phone').value;
-        const res = await authFetch('/patients', { method: 'POST', body: JSON.stringify({ nombre, telefono, driveLink: '' }) });
-        if (res && res.ok) { modal.style.display = "none"; loadPatientsPage(); }
+        
+        // LOS ENVIAMOS AL SERVIDOR
+        const res = await authFetch('/patients', { 
+            method: 'POST', 
+            body: JSON.stringify({ nombre, rif, address, telefono, driveLink: '' }) 
+        });
+        
+        if (res && res.ok) { 
+            modal.style.display = "none"; 
+            loadPatientsPage(); 
+            alert("✅ Cliente guardado con datos fiscales.");
+        }
     };
 }
 
@@ -159,26 +172,35 @@ async function loadPatientDetailsPage() {
     const p = patients.find(pat => pat._id === pid);
     if (!p) return;
 
-    // Rellenar datos
+    // Rellenar datos BÁSICOS Y FISCALES
     const lblHeader = document.getElementById('lbl-nombre-paciente-header');
     if(lblHeader) lblHeader.innerText = `Ficha de: ${p.nombre}`; 
     
     const lblNombre = document.getElementById('lbl-nombre-paciente');
     if(lblNombre) lblNombre.innerText = p.nombre; 
+
+    // --- NUEVOS CAMPOS ---
+    const lblRif = document.getElementById('lbl-rif-paciente');
+    if(lblRif) lblRif.innerText = p.rif || "No registrado"; // Si no tiene, avisa
+
+    const lblDir = document.getElementById('lbl-direccion-paciente');
+    if(lblDir) lblDir.innerText = p.address || "Sin dirección fiscal";
+    // ---------------------
     
     const lblTel = document.getElementById('lbl-telefono');
     if(lblTel) lblTel.innerText = p.telefono;
     
-    // Botones
+    // Configurar Botones
     const btnWa = document.getElementById('link-whatsapp-ficha'); 
     if(btnWa) btnWa.href = `https://wa.me/${p.telefono.replace(/\D/g,'')}`;
     
     const btnDel = document.getElementById('btn-eliminar-paciente'); 
     if(btnDel) btnDel.onclick = () => deleteCurrentPatient(pid);
     
+    // Actualizamos la edición para que incluya todo (opcionalmente simplificado aquí)
     const btnEd = document.getElementById('btn-editar-paciente'); 
-    if(btnEd) btnEd.onclick = () => editPatientPhone(pid, p.telefono);
-    
+    if(btnEd) btnEd.onclick = () => editPatientData(pid, p); // Llamamos a nueva función
+
     const btnDr = document.getElementById('btn-drive-folder'); 
     if(btnDr) btnDr.onclick = () => openPatientDrive(p);
 
@@ -187,10 +209,16 @@ async function loadPatientDetailsPage() {
     setupRecordModal(pid);
 }
 
-window.editPatientPhone = async function(id, oldPhone) {
-    const newPhone = prompt("Nuevo teléfono:", oldPhone);
-    if (newPhone && newPhone !== oldPhone) {
-        await authFetch(`/patients/${id}`, { method: 'PUT', body: JSON.stringify({ telefono: newPhone }) });
+// NUEVA FUNCIÓN EXTRA PARA EDITAR TODO (Pégala debajo de la anterior)
+window.editPatientData = async function(id, currentData) {
+    const newPhone = prompt("Editar Teléfono:", currentData.telefono);
+    const newRif = prompt("Editar RIF:", currentData.rif || "");
+    
+    if (newPhone) {
+        await authFetch(`/patients/${id}`, { 
+            method: 'PUT', 
+            body: JSON.stringify({ telefono: newPhone, rif: newRif }) 
+        });
         location.reload();
     }
 }
