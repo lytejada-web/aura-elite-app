@@ -340,12 +340,13 @@ function setupModalListeners() {
 }
 
 // =========================================
-// 5. FACTURACIÓN
+// 5. FACTURACIÓN Y PDF (MEJORADO)
 // =========================================
 let CACHED_INVOICES = [];
+
 async function loadInvoicesPage() { 
     const tbody = document.getElementById('invoices-table-body'); if(!tbody) return; 
-    tbody.innerHTML = '<tr><td colspan="7">Cargando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Cargando facturas...</td></tr>';
     
     const resInv = await authFetch('/invoices');
     const resPat = await authFetch('/patients');
@@ -357,31 +358,35 @@ async function loadInvoicesPage() {
     tbody.innerHTML = ''; 
     let totalBilled = 0;
     
+    // Ordenar por fecha (más reciente primero)
     CACHED_INVOICES.sort((a,b) => new Date(b.date) - new Date(a.date));
 
     CACHED_INVOICES.forEach(doc => { 
         const p = patients.find(x => x._id === doc.patientId); 
-        const pName = p ? p.nombre : "Eliminado"; 
+        const pName = p ? p.nombre : "Cliente Eliminado"; 
         const pPhone = p ? p.telefono.replace(/\D/g,'') : "";
         
-        if (doc.type === 'Factura') totalBilled += doc.amount;
+        if (doc.type === 'Factura') totalBilled += (parseFloat(doc.amount) || 0);
 
+        // Botón WhatsApp
         let waBtn = '';
         if (pPhone) {
-            let msg = `Hola ${pName}, adjunto documento ${doc.number} por valor de $${doc.amount}.`;
-            waBtn = `<a href="https://wa.me/${pPhone}?text=${encodeURIComponent(msg)}" target="_blank" class="btn-action">📱</a>`;
+            let msg = `Hola ${pName}, le envío su ${doc.type} ${doc.number} por valor de $${doc.amount}.`;
+            waBtn = `<a href="https://wa.me/${pPhone}?text=${encodeURIComponent(msg)}" target="_blank" class="btn-action" title="Enviar por WhatsApp">📱</a>`;
         }
 
+        // Botón Acción (Cambiar estado o Convertir)
         let actionBtn = "";
         if (doc.type === 'Presupuesto') {
-            actionBtn = `<button onclick="convertBudgetToInvoice('${doc._id}')" style="border:1px solid orange; color:orange; background:#fff;">⚡</button>`;
+            actionBtn = `<button onclick="convertBudgetToInvoice('${doc._id}')" style="border:1px solid orange; color:orange; background:#fff; cursor:pointer;" title="Convertir a Factura">⚡</button>`;
         } else {
             actionBtn = doc.status === 'Pagado' 
-                ? `<button onclick="toggleInvoiceStatus('${doc._id}', 'Pendiente')">↩️</button>`
-                : `<button onclick="toggleInvoiceStatus('${doc._id}', 'Pagado')" style="color:green;">✅</button>`;
+                ? `<button onclick="toggleInvoiceStatus('${doc._id}', 'Pendiente')" title="Marcar como Pendiente">↩️</button>`
+                : `<button onclick="toggleInvoiceStatus('${doc._id}', 'Pagado')" style="color:green; cursor:pointer;" title="Marcar como Pagado">✅</button>`;
         }
 
         const row = document.createElement('tr'); 
+        // AQUÍ ESTÁ EL CAMBIO: Añadido onclick="printInvoice(...)" al botón de impresora
         row.innerHTML = `
             <td><strong>${doc.number}</strong></td>
             <td>${pName}</td>
@@ -389,11 +394,103 @@ async function loadInvoicesPage() {
             <td>${doc.items[0]?.description || 'Servicio'}</td>
             <td>$${doc.amount}</td>
             <td><span class="status-badge ${doc.status === 'Pagado'?'complete':'pending'}">${doc.type === 'Presupuesto' ? 'PRE' : doc.status}</span> ${actionBtn}</td>
-            <td><button class="btn-action">🖨️</button> ${waBtn}</td>`; 
+            <td>
+                <button class="btn-action" onclick="printInvoice('${doc._id}')" title="Descargar PDF">🖨️</button> 
+                ${waBtn}
+            </td>`; 
         tbody.appendChild(row); 
     }); 
-    document.getElementById('lbl-total-billed').innerText = `$${totalBilled}`;
+    
+    const totalLabel = document.getElementById('lbl-total-billed');
+    if(totalLabel) totalLabel.innerText = `$${totalBilled.toFixed(2)}`;
 }
+
+// --- FUNCIÓN GENERADORA DE PDF ---
+window.printInvoice = async function(id) {
+    // 1. Verificar librería
+    if (!window.jspdf) {
+        alert("⚠️ Error: Librería PDF no cargada. Revisa facturas.html");
+        return;
+    }
+
+    // 2. Buscar datos
+    const docData = CACHED_INVOICES.find(d => d._id === id);
+    if(!docData) return;
+
+    // 3. Buscar datos del cliente (necesitamos nombre real)
+    let pName = "Cliente General";
+    let pPhone = "";
+    try {
+        const res = await authFetch('/patients');
+        const patients = await res.json();
+        const p = patients.find(x => x._id === docData.patientId);
+        if(p) { pName = p.nombre; pPhone = p.telefono; }
+    } catch(e) { console.log("No se pudo cargar detalles cliente para PDF"); }
+
+    // 4. Crear PDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // --- DISEÑO DEL PDF ---
+    
+    // Encabezado Empresa
+    doc.setFillColor(21, 67, 96); // Azul Aura
+    doc.rect(0, 0, 210, 40, 'F'); // Barra superior azul
+    
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.text("AURA ELITE", 14, 20); // Nombre App
+    doc.setFontSize(10);
+    doc.text("Gestión Profesional de Servicios", 14, 28);
+
+    // Datos del Documento (Derecha)
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(`Nº Documento: ${docData.number}`, 140, 50);
+    doc.text(`Fecha: ${docData.date}`, 140, 56);
+    doc.text(`Tipo: ${docData.type.toUpperCase()}`, 140, 62);
+
+    // Datos del Cliente (Izquierda)
+    doc.setFontSize(12);
+    doc.setTextColor(21, 67, 96);
+    doc.text("Datos del Cliente:", 14, 50);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Nombre: ${pName}`, 14, 58);
+    if(pPhone) doc.text(`Teléfono: ${pPhone}`, 14, 64);
+
+    // Tabla de Conceptos
+    const tableBody = docData.items.map(item => [
+        item.description, 
+        `$${parseFloat(item.price).toFixed(2)}`
+    ]);
+    
+    doc.autoTable({
+        startY: 75,
+        head: [['Descripción del Servicio', 'Importe']],
+        body: tableBody,
+        theme: 'grid',
+        headStyles: { fillColor: [21, 67, 96], textColor: 255 },
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: { 1: { halign: 'right' } } // Alinear precio a la derecha
+    });
+
+    // Totales
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text(`TOTAL: $${parseFloat(docData.amount).toFixed(2)}`, 140, finalY);
+
+    // Pie de página
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(150);
+    doc.text("Documento generado automáticamente por Aura Elite.", 14, 280);
+
+    // 5. Descargar
+    doc.save(`${docData.number}_${pName.replace(/\s+/g, '_')}.pdf`);
+};
 
 function setupInvoiceModal() {
     const modal = document.getElementById('new-invoice-modal');
@@ -431,7 +528,7 @@ function setupInvoiceModal() {
             const price = parseFloat(row.querySelector('.item-price').value) || 0;
             if(desc) { itemsToSave.push({ description: desc, price }); grandTotal += price; }
         });
-        if(itemsToSave.length === 0) return alert("Añade items");
+        if(itemsToSave.length === 0) return alert("Añade al menos un concepto");
 
         const type = document.getElementById('inv-type').value;
         const newDoc = { 
@@ -459,9 +556,14 @@ window.updateInvoiceTotal = function() {
     let total = 0; document.querySelectorAll('.item-price').forEach(i => total += parseFloat(i.value)||0);
     document.getElementById('lbl-grand-total').innerText = `$${total.toFixed(2)}`;
 }
-window.toggleInvoiceStatus = async (id, st) => { if(confirm("¿Cambiar estado?")) { await authFetch(`/invoices/${id}`, { method: 'PUT', body: JSON.stringify({status:st}) }); loadInvoicesPage(); }};
+window.toggleInvoiceStatus = async (id, st) => { 
+    if(confirm(`¿Marcar documento como ${st}?`)) { 
+        await authFetch(`/invoices/${id}`, { method: 'PUT', body: JSON.stringify({status:st}) }); 
+        loadInvoicesPage(); 
+    }
+};
 window.convertBudgetToInvoice = async (id) => { 
-    if(confirm("¿Convertir?")) { 
+    if(confirm("¿Convertir este Presupuesto en Factura oficial?")) { 
         const doc = CACHED_INVOICES.find(d=>d._id===id);
         await authFetch(`/invoices/${id}`, { method: 'PUT', body: JSON.stringify({ type:'Factura', number: doc.number.replace('PRE','FAC') }) }); 
         loadInvoicesPage(); 
