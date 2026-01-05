@@ -1,27 +1,47 @@
 /**
- * assets/js/app.js - VERSIÓN MAESTRA REPARADA
- * Incluye corrección para Ficha de Paciente y Menú Móvil
+ * assets/js/app.js - VERSIÓN DEFINITIVA (Smart Drive + Persistencia)
  */
 
 // const API_BASE_URL = 'http://localhost:3000/api'; 
 const API_BASE_URL = 'https://aura-elite-app.onrender.com/api'; 
 
+// --- CLAVES DE SISTEMA (Para persistencia de datos) ---
+const STORAGE_KEYS = {
+    TOKEN: 'aura_elite_token',
+    USER: 'aura_elite_user',
+    MAIN_DRIVE: 'aura_main_drive_link' // <--- ESTO NO SE BORRARÁ AL SALIR
+};
+
 // --- UTILIDAD: PETICIONES SEGURAS ---
 async function authFetch(endpoint, options = {}) {
-    if (typeof AUTH_KEYS === 'undefined') return null; 
-    const token = localStorage.getItem(AUTH_KEYS.TOKEN);
-    if (!token) { window.location.href = 'login.html'; return; }
+    if (typeof STORAGE_KEYS === 'undefined') return null; 
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    
+    // Si no hay token, mandamos al login
+    if (!token) { 
+        console.warn("No hay token, redirigiendo...");
+        window.location.href = 'login.html'; 
+        return; 
+    }
 
     const headers = { 'Content-Type': 'application/json', 'Authorization': token, ...options.headers };
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
         if (response.status === 401) {
-            localStorage.removeItem(AUTH_KEYS.TOKEN);
-            window.location.href = 'login.html';
+            secureLogout(); // Usamos la nueva función de salir segura
             return null;
         }
         return response;
     } catch (error) { console.error("Error API:", error); return null; }
+}
+
+// --- FUNCIÓN DE LOGOUT INTELIGENTE ---
+function secureLogout() {
+    // Solo borramos credenciales, MANTENEMOS la configuración del Drive
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER);
+    // localStorage.removeItem(STORAGE_KEYS.MAIN_DRIVE); <--- ESTO SE QUEDA GUARDADO
+    window.location.href = 'login.html';
 }
 
 // --- CATALOGO ---
@@ -40,13 +60,25 @@ let CURRENT_USER_PROFESSION = 'otro';
 // INICIALIZACIÓN
 // =========================================
 function initializeApp() {
-    if (typeof AUTH_KEYS === 'undefined') return;
-    const userJson = localStorage.getItem(AUTH_KEYS.USER);
+    const userJson = localStorage.getItem(STORAGE_KEYS.USER);
     if (userJson) {
         const user = JSON.parse(userJson);
         CURRENT_USER_PROFESSION = user.profession || 'otro';
         const nameElement = document.getElementById('user-display-name'); 
         if (nameElement) nameElement.innerText = user.name;
+    }
+
+    // Configurar botón de cerrar sesión globalmente
+    const btnLogout = document.getElementById('btn-logout'); 
+    if(btnLogout) {
+        // Clonamos para eliminar eventos viejos y aseguramos el nuevo logout
+        const newBtn = btnLogout.cloneNode(true);
+        btnLogout.parentNode.replaceChild(newBtn, btnLogout);
+        
+        newBtn.onclick = (e) => {
+            e.preventDefault();
+            if(confirm("¿Cerrar sesión? (Tu configuración de Drive se guardará)")) secureLogout();
+        };
     }
 }
 
@@ -437,51 +469,90 @@ window.convertBudgetToInvoice = async (id) => {
 };
 
 // =========================================
-// 6. FICHEROS (DRIVE & NUBE)
+// 6. FICHEROS (DRIVE & NUBE) - MEJORADO
 // =========================================
 async function loadDrivePage() {
-    const tbody = document.getElementById('files-table-body'); if (!tbody) return;
+    const tbody = document.getElementById('files-table-body'); 
+    const statusBox = document.querySelector('.alert-info'); // El cuadro azul
+    const btnConnect = document.getElementById('btn-connect-drive-main');
+
+    if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Cargando carpetas...</td></tr>';
     
+    // 1. Obtener Datos
     const res = await authFetch('/patients');
     if(!res) return;
     const patients = await res.json();
     
-    const mainDrive = localStorage.getItem('aura_main_drive_link');
-    const btnConnect = document.getElementById('btn-connect-drive-main');
+    // 2. Verificar Drive Principal (Persistencia)
+    const mainDrive = localStorage.getItem(STORAGE_KEYS.MAIN_DRIVE);
     
+    // 3. ACTUALIZAR UI (Estado visual coherente)
     if (btnConnect) {
         if (mainDrive) {
-            btnConnect.innerText = "✅ Drive Conectado";
-            btnConnect.style.backgroundColor = "#27ae60"; 
+            // Estado: CONECTADO
+            btnConnect.innerText = "📂 Ir a mi Drive Principal";
+            btnConnect.className = "btn-primary";
+            btnConnect.style.backgroundColor = "#27ae60"; // Verde
             btnConnect.onclick = () => window.open(mainDrive, '_blank');
+            
+            // Actualizar el cuadro de texto informativo (si existe)
+            if(statusBox) {
+                statusBox.style.backgroundColor = "#d4edda";
+                statusBox.style.color = "#155724";
+                statusBox.style.borderColor = "#c3e6cb";
+                statusBox.innerHTML = `
+                    <strong>✅ Estado: Sincronización Activa</strong><br>
+                    Tu Google Drive está conectado. Aura Elite gestiona los accesos directos a las carpetas.
+                    <br><small><a href="#" onclick="changeMainDrive()" style="color:#155724; text-decoration:underline;">(Cambiar cuenta)</a></small>
+                `;
+            }
         } else {
-            btnConnect.innerText = "🔗 Conectar mi Drive";
-            btnConnect.style.backgroundColor = "#f39c12"; 
+            // Estado: DESCONECTADO
+            btnConnect.innerText = "🔗 Conectar Google Drive";
+            btnConnect.style.backgroundColor = "#f39c12"; // Naranja
             btnConnect.onclick = setupMainDrive;
+            
+            if(statusBox) {
+                statusBox.innerHTML = `
+                    <strong>ℹ️ Estado de la Sincronización</strong><br>
+                    ⚠️ No conectado. Conecta tu cuenta para gestionar archivos.
+                `;
+            }
         }
     }
 
+    // 4. TABLA DE CLIENTES
     tbody.innerHTML = '';
     if(patients.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay clientes con carpetas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay clientes.</td></tr>';
         return;
     }
 
     patients.forEach(p => {
         const hasLink = p.driveLink && p.driveLink.startsWith('http');
-        const linkDisplay = hasLink 
-            ? `<a href="${p.driveLink}" target="_blank" style="color:#3498db; font-weight:bold;">Ver Carpeta</a>` 
-            : `<span style="color:#999; font-size:0.9rem;">Sin carpeta propia</span>`;
         
-        const actionBtns = hasLink 
-            ? `<button onclick="unlinkDriveFolder('${p._id}')" style="color:red; background:none; border:none; cursor:pointer;" title="Desvincular">❌</button>` 
-            : `<button onclick="linkDriveFolder('${p._id}', '${p.nombre}')" class="btn-action" style="color:green; border:1px solid green; padding:2px 8px; border-radius:4px;">➕ Vincular</button>`;
+        // Lógica: Si tiene carpeta, mostramos botón de ABRIR. Si no, botón de CREAR/VINCULAR.
+        const linkDisplay = hasLink 
+            ? `<a href="${p.driveLink}" target="_blank" style="color:#3498db; font-weight:bold; text-decoration:none;">📂 ${p.nombre} (Drive)</a>` 
+            : `<span style="color:#999; font-size:0.9rem;">Sin carpeta</span>`;
+        
+        // Botones de acción inteligentes
+        let actionBtns = '';
+        if (hasLink) {
+             // Botón Subir = Abrir carpeta directamente para arrastrar archivos
+            actionBtns = `
+                <button onclick="window.open('${p.driveLink}', '_blank')" class="btn-action" style="background:#3498db; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px;" title="Subir archivos aquí">⬆️ Subir Archivo</button>
+                <button onclick="unlinkDriveFolder('${p._id}')" style="color:red; background:none; border:none; cursor:pointer;" title="Desvincular">❌</button>
+            `;
+        } else {
+            actionBtns = `<button onclick="linkDriveFolder('${p._id}', '${p.nombre}')" class="btn-action" style="color:green; border:1px solid green; padding:2px 8px; border-radius:4px;">➕ Vincular Carpeta</button>`;
+        }
         
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><strong>${p.nombre}</strong></td>
-            <td>${hasLink ? '📂' : '⚪'}</td>
+            <td>${hasLink ? '✅' : '⚪'}</td>
             <td>${linkDisplay}</td>
             <td style="text-align:center;">${actionBtns}</td>`;
         tbody.appendChild(row);
@@ -490,17 +561,24 @@ async function loadDrivePage() {
 
 function setupDrivePage() { loadDrivePage(); }
 
+// Funciones Auxiliares de Drive
 window.setupMainDrive = function() {
-    const link = prompt("📂 Pega aquí el enlace a tu carpeta PRINCIPAL de Google Drive:");
+    const link = prompt("📂 Pega el enlace de tu carpeta RAÍZ de Google Drive:");
     if (link && link.startsWith('http')) {
-        localStorage.setItem('aura_main_drive_link', link);
-        alert("✅ Drive Principal conectado.");
-        loadDrivePage();
+        localStorage.setItem(STORAGE_KEYS.MAIN_DRIVE, link);
+        alert("✅ Conectado. Ahora tus preferencias se guardarán.");
+        loadDrivePage(); 
     } else if (link) { alert("⚠️ El enlace debe empezar por http"); }
 };
 
+window.changeMainDrive = function() {
+    if(confirm("¿Quieres cambiar la carpeta principal de Drive?")) {
+        setupMainDrive();
+    }
+}
+
 window.linkDriveFolder = async function(id, nombre) {
-    const l = prompt(`📂 Pega el link de la carpeta de ${nombre}:`);
+    const l = prompt(`📂 Pega el link de la carpeta Drive para el cliente: ${nombre}`);
     if (l) {
         await authFetch(`/patients/${id}`, { method: 'PUT', body: JSON.stringify({ driveLink: l }) });
         loadDrivePage();
@@ -508,7 +586,7 @@ window.linkDriveFolder = async function(id, nombre) {
 };
 
 window.unlinkDriveFolder = async function(id) {
-    if(confirm("¿Desvincular carpeta?")) {
+    if(confirm("¿Desvincular carpeta del cliente?")) {
         await authFetch(`/patients/${id}`, { method: 'PUT', body: JSON.stringify({ driveLink: '' }) });
         loadDrivePage();
     }
@@ -595,19 +673,21 @@ async function router() {
         if (typeof setupSearchListener === 'function') setupSearchListener();
         if (typeof setupPatientModalListeners === 'function') setupPatientModalListeners();
     } 
-    // --- ¡AQUÍ ESTABA EL FALLO! SECCIÓN NUEVA PARA FICHA ---
+    // SECCIÓN FICHA
     else if (path.includes('ficha') || path.includes('paciente')) {
         if (typeof loadPatientDetailsPage === 'function') loadPatientDetailsPage();
     }
-    // --------------------------------------------------------
+    // CALENDARIO
     else if (path.includes('calendario')) { 
         if (typeof loadCalendarPage === 'function') loadCalendarPage();
         if (typeof setupModalListeners === 'function') setupModalListeners();
     }
+    // FACTURAS
     else if (path.includes('facturas')) { 
         if (typeof loadInvoicesPage === 'function') loadInvoicesPage();
         if (typeof setupInvoiceModal === 'function') setupInvoiceModal();
     }
+    // FICHEROS
     else if (path.includes('ficheros')) { 
         if (typeof setupDrivePage === 'function') setupDrivePage();
         if (typeof loadDrivePage === 'function') loadDrivePage();
