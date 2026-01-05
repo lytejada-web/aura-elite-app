@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración | Aura Elite</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <aside id="sidebar">
+            <div class="logo-dashboard">
+                <a href="dashboard.html"><h1>Aura Elite</h1></a>
+            </div>
+            <nav class="main-menu">
+                <ul>
+                    <li><a href="dashboard.html">🏠 Inicio</a></li>
+                    <li><a href="calendario.html">📅 Calendario</a></li>
+                    <li><a href="clientes.html">👥 Clientes</a></li>
+                    <li><a href="facturas.html">💰 Facturación</a></li>
+                    <li><a href="ficheros.html">☁️ Ficheros (Drive)</a></li>
+                    <li><a href="perfil.html" class="active" style="color:#FF6347;">⚙️ Configuración</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <p>Prof(a). <span id="user-display-name">Usuario</span></p>
+                <a href="#" id="btn-logout" style="color: #ff6b6b;">Cerrar Sesión</a>
+            </div>
+        </aside>
+
+        <section id="main-content">
+            
+            <header id="topbar">
+                <button id="btn-menu-mobile" style="display: none;">☰</button>
+                <h2>Configuración de Negocio</h2>
+                <button onclick="saveProfile()" class="btn-primary">💾 Guardar Cambios</button>
+            </header>
+            
+            <div class="content-area">
+                
+                <div class="feature-block" style="text-align: left; max-width: 800px; margin: 0 auto;">
+                    <h3 style="color: #154360; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
+                        🏦 Datos Fiscales (Para Facturas)
+                    </h3>
+                    
+                    <form id="profile-form">
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-weight:bold;">Nombre o Razón Social:</label>
+                            <input type="text" id="biz-name" placeholder="Ej: Consultorio Dr. Pérez / Inversiones ABC, C.A." 
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-weight:bold;">RIF / Documento Fiscal:</label>
+                            <input type="text" id="biz-rif" placeholder="Ej: J-12345678-0" 
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-weight:bold;">Dirección Fiscal Completa:</label>
+                            <textarea id="biz-address" rows="3" placeholder="Ej: Av. Principal, Torre A, Piso 5, Oficina 5-B, Caracas, Venezuela." 
+                                      style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-weight:bold;">Teléfono de Contacto:</label>
+                            <input type="text" id="biz-phone" placeholder="Ej: 0414-0000000" 
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-weight:bold;">Enlace al Logo (Opcional):</label>
+                            <input type="url" id="biz-logo" placeholder="https://miweb.com/logo.png" 
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <p style="font-size: 0.8rem; color: #666;">* Pega aquí el enlace directo a tu imagen de logo para que salga en el PDF.</p>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+            
+        </section>
+        
+    </div>
+
+    <script src="assets/js/app.js"></script>
+
+    <script>
+        // SCRIPT LOCAL PARA GESTIONAR EL PERFIL
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+        });
+
+        function saveProfile() {
+            const profile = {
+                name: document.getElementById('biz-name').value,
+                rif: document.getElementById('biz-rif').value,
+                address: document.getElementById('biz-address').value,
+                phone: document.getElementById('biz-phone').value,
+                logo: document.getElementById('biz-logo').value
+            };
+            
+            // Guardamos en LocalStorage (Persistente en tu navegador)
+            localStorage.setItem('aura_business_profile', JSON.stringify(profile));
+            alert("✅ Datos fiscales guardados correctamente.");
+        }
+
+        function loadProfile() {
+            const data = localStorage.getItem('aura_business_profile');
+            if (data) {
+                const p = JSON.parse(data);
+                document.getElementById('biz-name').value = p.name || '';
+                document.getElementById('biz-rif').value = p.rif || '';
+                document.getElementById('biz-address').value = p.address || '';
+                document.getElementById('biz-phone').value = p.phone || '';
+                document.getElementById('biz-logo').value = p.logo || '';
+            }
+        }
+    </script>
+</body>
+</html>
