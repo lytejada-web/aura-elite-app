@@ -11,15 +11,13 @@
     <div id="app-container">
         
         <aside id="sidebar">
-            <div class="logo-dashboard">
-                <a href="dashboard.html"><h1>Aura Elite</h1></a>
-            </div>
+            <div class="logo-dashboard"><a href="dashboard.html"><h1>Aura Elite</h1></a></div>
             <nav class="main-menu">
                 <ul>
                     <li><a href="dashboard.html">🏠 Inicio</a></li>
                     <li><a href="calendario.html">📅 Calendario</a></li>
                     <li><a href="clientes.html">👥 Clientes</a></li>
-                    <li><a href="facturas.html">💰 Facturación</a></li>
+                    <li><a href="facturas.html">💵 Facturación</a></li>
                     <li><a href="ficheros.html">☁️ Ficheros (Drive)</a></li>
                     <li><a href="perfil.html" class="active" style="color:#FF6347;">⚙️ Configuración</a></li>
                 </ul>
@@ -31,7 +29,6 @@
         </aside>
 
         <section id="main-content">
-            
             <header id="topbar">
                 <button id="btn-menu-mobile" style="display: none;">☰</button>
                 <h2>Configuración de Negocio</h2>
@@ -39,60 +36,73 @@
             </header>
             
             <div class="content-area">
-                
                 <div class="feature-block" style="text-align: left; max-width: 800px; margin: 0 auto;">
                     <h3 style="color: #154360; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
                         🏦 Datos Fiscales (Para Facturas)
                     </h3>
                     
                     <form id="profile-form">
-                        
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-weight:bold;">Nombre o Razón Social:</label>
-                            <input type="text" id="biz-name" placeholder="Ej: Consultorio Dr. Pérez / Inversiones ABC, C.A." 
-                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="text" id="biz-name" placeholder="Ej: Consultorio Dr. Pérez" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-weight:bold;">RIF / Documento Fiscal:</label>
-                            <input type="text" id="biz-rif" placeholder="Ej: J-12345678-0" 
-                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="text" id="biz-rif" placeholder="Ej: J-12345678-0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-weight:bold;">Dirección Fiscal Completa:</label>
-                            <textarea id="biz-address" rows="3" placeholder="Ej: Av. Principal, Torre A, Piso 5, Oficina 5-B, Caracas, Venezuela." 
-                                      style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                            <textarea id="biz-address" rows="3" placeholder="Ej: Av. Principal..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-weight:bold;">Teléfono de Contacto:</label>
-                            <input type="text" id="biz-phone" placeholder="Ej: 0414-0000000" 
-                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="text" id="biz-phone" placeholder="Ej: 0414-0000000" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-weight:bold;">Enlace al Logo (Opcional):</label>
-                            <input type="url" id="biz-logo" placeholder="https://miweb.com/logo.png" 
-                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                            <p style="font-size: 0.8rem; color: #666;">* Pega aquí el enlace directo a tu imagen de logo para que salga en el PDF.</p>
+                        <div class="form-group" style="margin-bottom: 15px; border: 1px dashed #ccc; padding: 15px; background: #f9f9f9;">
+                            <label style="font-weight:bold;">Logo del Negocio (Imagen):</label>
+                            <input type="file" id="biz-logo-file" accept="image/*" style="margin-top: 10px;">
+                            <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">* Sube una imagen (JPG/PNG). Se usará automáticamente en los PDF.</p>
+                            
+                            <div id="logo-preview-container" style="margin-top: 10px; display: none;">
+                                <p>Logo actual:</p>
+                                <img id="logo-preview" src="" style="max-width: 150px; border: 1px solid #ddd; padding: 5px; background: white;">
+                            </div>
                         </div>
-
                     </form>
                 </div>
-
             </div>
-            
         </section>
-        
     </div>
 
     <script src="assets/js/app.js"></script>
 
     <script>
-        // SCRIPT LOCAL PARA GESTIONAR EL PERFIL
+        // SCRIPT ESPECIAL PARA GESTIONAR LA IMAGEN
         document.addEventListener('DOMContentLoaded', () => {
             loadProfile();
+        });
+
+        // Variable para guardar la imagen en formato texto (Base64)
+        let currentLogoBase64 = "";
+
+        // Detectar cuando el usuario selecciona una imagen
+        document.getElementById('biz-logo-file').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentLogoBase64 = e.target.result; // Guardamos la imagen convertida
+                    // Mostrar preview
+                    const preview = document.getElementById('logo-preview');
+                    preview.src = currentLogoBase64;
+                    document.getElementById('logo-preview-container').style.display = 'block';
+                };
+                reader.readAsDataURL(file); // Magia: Convierte archivo a texto
+            }
         });
 
         function saveProfile() {
@@ -101,12 +111,11 @@
                 rif: document.getElementById('biz-rif').value,
                 address: document.getElementById('biz-address').value,
                 phone: document.getElementById('biz-phone').value,
-                logo: document.getElementById('biz-logo').value
+                logo: currentLogoBase64 // Guardamos la imagen convertida
             };
             
-            // Guardamos en LocalStorage (Persistente en tu navegador)
             localStorage.setItem('aura_business_profile', JSON.stringify(profile));
-            alert("✅ Datos fiscales guardados correctamente.");
+            alert("✅ Datos y Logo guardados correctamente.");
         }
 
         function loadProfile() {
@@ -117,7 +126,14 @@
                 document.getElementById('biz-rif').value = p.rif || '';
                 document.getElementById('biz-address').value = p.address || '';
                 document.getElementById('biz-phone').value = p.phone || '';
-                document.getElementById('biz-logo').value = p.logo || '';
+                
+                // Cargar Logo si existe
+                if (p.logo) {
+                    currentLogoBase64 = p.logo;
+                    const preview = document.getElementById('logo-preview');
+                    preview.src = p.logo;
+                    document.getElementById('logo-preview-container').style.display = 'block';
+                }
             }
         }
     </script>

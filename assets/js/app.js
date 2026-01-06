@@ -470,33 +470,33 @@ async function loadInvoicesPage() {
     if(totalLabel) totalLabel.innerText = `$${totalBilled.toFixed(2)}`;
 }
 
-// --- GENERADOR PDF FISCAL (ESTILO VENEZUELA) ---
+// --- GENERADOR PDF FISCAL CON LOGO ---
 window.printInvoice = async function(id) {
     if (!window.jspdf) { alert("⚠️ Librería PDF no cargada."); return; }
 
     const docData = CACHED_INVOICES.find(d => d._id === id);
     if(!docData) return;
 
-    // Obtener datos del Cliente (MEZCLADOS)
+    // Obtener Cliente
     let client = { nombre: "Cliente General", rif: "N/A", address: "N/A", telefono: "" };
     try {
         const res = await authFetch('/patients');
         const patients = await res.json();
         let p = patients.find(x => x._id === docData.patientId);
         if(p) {
-            // AQUÍ LA CLAVE: Mezclamos con los datos locales
             const meta = MetaDB.get(p._id);
             client = { ...p, ...meta };
         }
     } catch(e) {}
 
-    // Obtener TU Perfil de Negocio
+    // Obtener TU Perfil (Incluyendo el LOGO)
     const myProfile = JSON.parse(localStorage.getItem(STORAGE_KEYS.BIZ_PROFILE) || '{}');
     const myName = myProfile.name || "AURA ELITE";
-    const myRif = myProfile.rif || "J-00000000-0";
-    const myAddress = myProfile.address || "Dirección no configurada";
+    const myRif = myProfile.rif || "";
+    const myAddress = myProfile.address || "";
+    const myLogo = myProfile.logo || null; // <--- AQUÍ RECUPERAMOS LA IMAGEN
 
-    // Cálculos Matemáticos (IVA 16%)
+    // Cálculos
     const baseImponible = parseFloat(docData.amount); 
     const rateIVA = 0.16; 
     const montoIVA = baseImponible * rateIVA;
@@ -506,38 +506,68 @@ window.printInvoice = async function(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // 1. CABECERA
-    doc.setFillColor(21, 67, 96); 
-    doc.rect(0, 0, 210, 35, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18); doc.setFont("helvetica", "bold");
-    doc.text(myName, 14, 15);
-    doc.setFontSize(10); doc.setFont("helvetica", "normal");
-    doc.text(`RIF: ${myRif}`, 14, 22);
-    const splitAddress = doc.splitTextToSize(myAddress, 100);
-    doc.text(splitAddress, 14, 28);
+    // 1. LOGO (Si existe, lo ponemos a la izquierda)
+    let textStartX = 14; // Posición X del texto (si no hay logo)
+    
+    if (myLogo) {
+        try {
+            // Ponemos el logo: imagen, formato, X, Y, Ancho, Alto
+            doc.addImage(myLogo, 'JPEG', 14, 10, 30, 30); 
+            textStartX = 50; // Movemos el texto a la derecha para que no pise el logo
+        } catch (err) {
+            console.error("Error al poner el logo:", err);
+        }
+    }
 
-    // 2. DATOS FACTURA
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.setTextColor(200, 0, 0);
+    // 2. CABECERA (TUS DATOS) - Ajustada según si hay logo o no
+    doc.setTextColor(21, 67, 96); 
+    doc.setFontSize(16); 
+    doc.setFont("helvetica", "bold");
+    doc.text(myName, textStartX, 20); 
+    
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(10); 
+    doc.setFont("helvetica", "normal");
+    
+    if(myRif) doc.text(`RIF: ${myRif}`, textStartX, 26);
+    
+    // Dirección dividida en líneas
+    const splitAddress = doc.splitTextToSize(myAddress, 80); // Ajustado ancho para no chocar
+    doc.text(splitAddress, textStartX, 32);
+
+    // 3. DATOS DE LA FACTURA (Derecha)
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(200, 0, 0); 
     doc.text(`${docData.type.toUpperCase()} N° ${docData.number}`, 130, 20);
-    doc.setFontSize(10); doc.setTextColor(0,0,0); doc.setFont("helvetica", "normal");
+    
+    doc.setTextColor(0, 0, 0); 
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
     doc.text(`Fecha: ${docData.date}`, 130, 28);
 
-    // 3. CLIENTE
-    doc.setDrawColor(200); doc.rect(14, 45, 182, 25);
-    doc.setFontSize(9); doc.setFont("helvetica", "bold");
-    doc.text("DATOS DEL CLIENTE:", 16, 50);
+    // 4. DATOS DEL CLIENTE (Caja)
+    doc.setDrawColor(200); 
+    doc.rect(14, 50, 182, 25); 
+    
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("DATOS DEL CLIENTE:", 16, 55);
+    
     doc.setFont("helvetica", "normal");
-    doc.text(`Razón Social: ${client.nombre}`, 16, 56);
-    doc.text(`RIF/CI: ${client.rif || "No registrado"}`, 120, 56);
-    doc.text(`Dirección: ${client.address || "No registrada"}`, 16, 62);
-    doc.text(`Teléfono: ${client.telefono}`, 120, 62);
+    doc.text(`Razón Social: ${client.nombre}`, 16, 62);
+    doc.text(`RIF/CI: ${client.rif || "No registrado"}`, 120, 62);
+    doc.text(`Dirección: ${client.address || "No registrada"}`, 16, 68);
+    doc.text(`Teléfono: ${client.telefono}`, 120, 68);
 
-    // 4. TABLA
-    const tableBody = docData.items.map(item => [item.description, `$${parseFloat(item.price).toFixed(2)}`]);
+    // 5. TABLA DE ITEMS
+    const tableBody = docData.items.map(item => [
+        item.description, 
+        `$${parseFloat(item.price).toFixed(2)}`
+    ]);
+    
     doc.autoTable({
-        startY: 75,
+        startY: 80,
         head: [['Descripción', 'Monto']],
         body: tableBody,
         theme: 'grid',
@@ -545,12 +575,15 @@ window.printInvoice = async function(id) {
         columnStyles: { 1: { halign: 'right' } }
     });
 
-    // 5. TOTALES
+    // 6. TOTALES
     const finalY = doc.lastAutoTable.finalY + 5;
+    
     doc.setFontSize(10);
     doc.text(`Base Imponible: $${baseImponible.toFixed(2)}`, 190, finalY + 6, { align: "right" });
     doc.text(`I.V.A. (16%): $${montoIVA.toFixed(2)}`, 190, finalY + 12, { align: "right" });
-    doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    
+    doc.setFontSize(12); 
+    doc.setFont("helvetica", "bold");
     doc.text(`TOTAL A PAGAR: $${totalPagar.toFixed(2)}`, 190, finalY + 20, { align: "right" });
 
     doc.save(`${docData.number}_${client.nombre}.pdf`);
