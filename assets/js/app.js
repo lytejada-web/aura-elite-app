@@ -1,6 +1,6 @@
 /**
- * assets/js/app.js - VERSIÓN FINAL CON "MEMORIA PARALELA"
- * Soluciona: Guardado de RIF y Dirección aunque la Nube no los acepte.
+ * assets/js/app.js - VERSIÓN NUBE TOTAL (Sincronización Multi-dispositivo)
+ * Conecta RIF, Direcciones y Configuración directamente al Servidor.
  */
 
 // const API_BASE_URL = 'http://localhost:3000/api'; 
@@ -10,9 +10,7 @@ const API_BASE_URL = 'https://aura-elite-app.onrender.com/api';
 const STORAGE_KEYS = {
     TOKEN: 'aura_elite_token',
     USER: 'aura_elite_user',
-    MAIN_DRIVE: 'aura_main_drive_link',
-    BIZ_PROFILE: 'aura_business_profile',
-    PATIENTS_META: 'aura_patients_extra_data' // <--- AQUÍ GUARDARÁ RIF Y DIRECCIÓN
+    MAIN_DRIVE: 'aura_main_drive_link'
 };
 
 // --- UTILIDAD: PETICIONES SEGURAS ---
@@ -39,30 +37,9 @@ async function authFetch(endpoint, options = {}) {
 function secureLogout() {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
-    // NO borramos PATIENTS_META para no perder los RIFs
+    // Ya no necesitamos borrar nada más, todo viene de la nube
     window.location.href = 'login.html';
 }
-
-// --- GESTOR DE MEMORIA PARALELA (SIDEBAR DB) ---
-// Estas funciones guardan lo que la Nube rechaza
-const MetaDB = {
-    getAll: () => JSON.parse(localStorage.getItem(STORAGE_KEYS.PATIENTS_META) || '{}'),
-    save: (id, data) => {
-        const db = MetaDB.getAll();
-        // Mezclamos lo que había con lo nuevo
-        db[id] = { ...db[id], ...data }; 
-        localStorage.setItem(STORAGE_KEYS.PATIENTS_META, JSON.stringify(db));
-    },
-    get: (id) => {
-        const db = MetaDB.getAll();
-        return db[id] || {};
-    },
-    delete: (id) => {
-        const db = MetaDB.getAll();
-        delete db[id];
-        localStorage.setItem(STORAGE_KEYS.PATIENTS_META, JSON.stringify(db));
-    }
-};
 
 // --- CATALOGO ---
 const SERVICE_CATALOG = {
@@ -110,11 +87,7 @@ async function loadPatientsPage(searchTerm = "") {
     if (!res) return;
     let patients = await res.json();
 
-    // Enriquecer con datos locales (RIF)
-    patients = patients.map(p => {
-        const meta = MetaDB.get(p._id);
-        return { ...p, ...meta }; // Mezcla datos nube + datos locales
-    });
+    // Ya NO necesitamos mezclar con MetaDB, los datos vienen completos de la nube
 
     if (searchTerm.trim() !== "") {
         const term = searchTerm.toLowerCase();
@@ -166,22 +139,16 @@ function setupPatientModalListeners() {
         const address = document.getElementById('patient-address').value;  
         const telefono = document.getElementById('patient-phone').value;
         
-        // 1. Guardar en NUBE (Solo nombre y teléfono)
+        // ENVÍO DIRECTO A LA NUBE (Ahora el servidor acepta todo)
         const res = await authFetch('/patients', { 
             method: 'POST', 
-            body: JSON.stringify({ nombre, telefono, driveLink: '' }) 
+            body: JSON.stringify({ nombre, rif, address, telefono, driveLink: '' }) 
         });
         
         if (res && res.ok) { 
-            // 2. Guardar en MEMORIA PARALELA (RIF y Dirección usando el ID nuevo)
-            const newPatient = await res.json(); // La nube nos devuelve el ID creado
-            if (newPatient && newPatient._id) {
-                MetaDB.save(newPatient._id, { rif, address });
-            }
-
             modal.style.display = "none"; 
             loadPatientsPage(); 
-            alert("✅ Cliente registrado correctamente.");
+            alert("✅ Cliente guardado en la nube.");
         }
     };
 }
@@ -197,15 +164,10 @@ async function loadPatientDetailsPage() {
     const res = await authFetch('/patients');
     if (!res) return;
     const patients = await res.json();
-    let p = patients.find(pat => pat._id === pid);
+    const p = patients.find(pat => pat._id === pid);
     if (!p) return;
 
-    // --- FUSIÓN DE DATOS (Nube + Local) ---
-    const meta = MetaDB.get(pid);
-    p = { ...p, ...meta }; // Ahora 'p' tiene rif y address aunque la nube no los tenga
-    // --------------------------------------
-
-    // Rellenar Ficha
+    // Rellenar Ficha (Datos directos de p, que viene de la nube)
     const lblHeader = document.getElementById('lbl-nombre-paciente-header');
     if(lblHeader) lblHeader.innerText = `Ficha de: ${p.nombre}`; 
     
@@ -228,7 +190,6 @@ async function loadPatientDetailsPage() {
     const btnDel = document.getElementById('btn-eliminar-paciente'); 
     if(btnDel) btnDel.onclick = () => deleteCurrentPatient(pid);
     
-    // Edición Completa
     const btnEd = document.getElementById('btn-editar-paciente'); 
     if(btnEd) btnEd.onclick = () => editPatientData(pid, p); 
 
@@ -239,7 +200,7 @@ async function loadPatientDetailsPage() {
     setupRecordModal(pid);
 }
 
-// --- FUNCIÓN DE EDICIÓN (GUARDA EN DOS SITIOS) ---
+// --- FUNCIÓN DE EDICIÓN (GUARDA EN NUBE) ---
 window.editPatientData = async function(id, currentData) {
     const newPhone = prompt("📞 Nuevo Teléfono:", currentData.telefono);
     if (newPhone === null) return; 
@@ -250,24 +211,18 @@ window.editPatientData = async function(id, currentData) {
     const newAddress = prompt("📍 Nueva Dirección Fiscal:", currentData.address || "");
     if (newAddress === null) return;
     
-    // 1. Actualizar NUBE (Teléfono)
+    // Actualizar NUBE (Todo en una sola petición)
     await authFetch(`/patients/${id}`, { 
         method: 'PUT', 
-        body: JSON.stringify({ telefono: newPhone }) 
+        body: JSON.stringify({ telefono: newPhone, rif: newRif, address: newAddress }) 
     });
     
-    // 2. Actualizar LOCAL (RIF y Dirección)
-    MetaDB.save(id, { rif: newRif, address: newAddress });
-
     location.reload(); 
 }
 
 window.deleteCurrentPatient = async function(id) {
     if(!confirm("⚠️ ¿Estás seguro de eliminar este cliente y todo su historial?")) return;
-    
     await authFetch(`/patients/${id}`, { method: 'DELETE' });
-    MetaDB.delete(id); // Borramos también de la memoria local
-
     window.location.href = 'clientes.html';
 };
 
@@ -421,9 +376,6 @@ async function loadInvoicesPage() {
     CACHED_INVOICES = await resInv.json();
     let patients = await resPat.json();
 
-    // Enriquecer pacientes con datos locales para el listado también
-    patients = patients.map(p => ({ ...p, ...MetaDB.get(p._id) }));
-
     tbody.innerHTML = ''; 
     let totalBilled = 0;
     
@@ -470,33 +422,42 @@ async function loadInvoicesPage() {
     if(totalLabel) totalLabel.innerText = `$${totalBilled.toFixed(2)}`;
 }
 
-// --- GENERADOR PDF FISCAL CON LOGO ---
+// --- GENERADOR PDF FISCAL (LEE DE LA NUBE) ---
 window.printInvoice = async function(id) {
     if (!window.jspdf) { alert("⚠️ Librería PDF no cargada."); return; }
 
     const docData = CACHED_INVOICES.find(d => d._id === id);
     if(!docData) return;
 
-    // Obtener Cliente
+    // Obtener datos del Cliente (Ya vienen completos de la nube)
     let client = { nombre: "Cliente General", rif: "N/A", address: "N/A", telefono: "" };
     try {
         const res = await authFetch('/patients');
         const patients = await res.json();
         let p = patients.find(x => x._id === docData.patientId);
-        if(p) {
-            const meta = MetaDB.get(p._id);
-            client = { ...p, ...meta };
-        }
+        if(p) client = { ...p };
     } catch(e) {}
 
-    // Obtener TU Perfil (Incluyendo el LOGO)
-    const myProfile = JSON.parse(localStorage.getItem(STORAGE_KEYS.BIZ_PROFILE) || '{}');
-    const myName = myProfile.name || "AURA ELITE";
-    const myRif = myProfile.rif || "";
-    const myAddress = myProfile.address || "";
-    const myLogo = myProfile.logo || null; // <--- AQUÍ RECUPERAMOS LA IMAGEN
+    // Obtener TU Perfil de Negocio (DESDE LA NUBE, no localstorage)
+    let myName = "AURA ELITE";
+    let myRif = "";
+    let myAddress = "";
+    let myLogo = null;
 
-    // Cálculos
+    try {
+        // Pedimos datos frescos al servidor para asegurar que es la última configuración
+        const resUser = await authFetch('/user/me');
+        if(resUser && resUser.ok) {
+            const user = await resUser.json();
+            const prof = user.businessProfile || {};
+            myName = prof.name || "AURA ELITE";
+            myRif = prof.rif || "";
+            myAddress = prof.address || "";
+            myLogo = prof.logo || null;
+        }
+    } catch(e) { console.error("Error cargando perfil negocio", e); }
+
+    // Cálculos Matemáticos (IVA 16%)
     const baseImponible = parseFloat(docData.amount); 
     const rateIVA = 0.16; 
     const montoIVA = baseImponible * rateIVA;
@@ -506,66 +467,43 @@ window.printInvoice = async function(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // 1. LOGO (Si existe, lo ponemos a la izquierda)
-    let textStartX = 14; // Posición X del texto (si no hay logo)
-    
+    // 1. LOGO
+    let textStartX = 14; 
     if (myLogo) {
         try {
-            // Ponemos el logo: imagen, formato, X, Y, Ancho, Alto
             doc.addImage(myLogo, 'JPEG', 14, 10, 30, 30); 
-            textStartX = 50; // Movemos el texto a la derecha para que no pise el logo
-        } catch (err) {
-            console.error("Error al poner el logo:", err);
-        }
+            textStartX = 50; 
+        } catch (err) {}
     }
 
-    // 2. CABECERA (TUS DATOS) - Ajustada según si hay logo o no
-    doc.setTextColor(21, 67, 96); 
-    doc.setFontSize(16); 
-    doc.setFont("helvetica", "bold");
+    // 2. CABECERA
+    doc.setFillColor(21, 67, 96); 
+    doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(21, 67, 96);
     doc.text(myName, textStartX, 20); 
     
-    doc.setTextColor(50, 50, 50);
-    doc.setFontSize(10); 
-    doc.setFont("helvetica", "normal");
-    
+    doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50);
     if(myRif) doc.text(`RIF: ${myRif}`, textStartX, 26);
-    
-    // Dirección dividida en líneas
-    const splitAddress = doc.splitTextToSize(myAddress, 80); // Ajustado ancho para no chocar
+    const splitAddress = doc.splitTextToSize(myAddress, 80);
     doc.text(splitAddress, textStartX, 32);
 
-    // 3. DATOS DE LA FACTURA (Derecha)
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(200, 0, 0); 
+    // 3. DATOS FACTURA
+    doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.setTextColor(200, 0, 0);
     doc.text(`${docData.type.toUpperCase()} N° ${docData.number}`, 130, 20);
-    
-    doc.setTextColor(0, 0, 0); 
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10); doc.setTextColor(0,0,0); doc.setFont("helvetica", "normal");
     doc.text(`Fecha: ${docData.date}`, 130, 28);
 
-    // 4. DATOS DEL CLIENTE (Caja)
-    doc.setDrawColor(200); 
-    doc.rect(14, 50, 182, 25); 
-    
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
+    // 4. CLIENTE
+    doc.setDrawColor(200); doc.rect(14, 50, 182, 25);
+    doc.setFontSize(9); doc.setFont("helvetica", "bold");
     doc.text("DATOS DEL CLIENTE:", 16, 55);
-    
     doc.setFont("helvetica", "normal");
     doc.text(`Razón Social: ${client.nombre}`, 16, 62);
     doc.text(`RIF/CI: ${client.rif || "No registrado"}`, 120, 62);
     doc.text(`Dirección: ${client.address || "No registrada"}`, 16, 68);
     doc.text(`Teléfono: ${client.telefono}`, 120, 68);
 
-    // 5. TABLA DE ITEMS
-    const tableBody = docData.items.map(item => [
-        item.description, 
-        `$${parseFloat(item.price).toFixed(2)}`
-    ]);
-    
+    // 5. TABLA
+    const tableBody = docData.items.map(item => [item.description, `$${parseFloat(item.price).toFixed(2)}`]);
     doc.autoTable({
         startY: 80,
         head: [['Descripción', 'Monto']],
@@ -577,13 +515,10 @@ window.printInvoice = async function(id) {
 
     // 6. TOTALES
     const finalY = doc.lastAutoTable.finalY + 5;
-    
     doc.setFontSize(10);
     doc.text(`Base Imponible: $${baseImponible.toFixed(2)}`, 190, finalY + 6, { align: "right" });
     doc.text(`I.V.A. (16%): $${montoIVA.toFixed(2)}`, 190, finalY + 12, { align: "right" });
-    
-    doc.setFontSize(12); 
-    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12); doc.setFont("helvetica", "bold");
     doc.text(`TOTAL A PAGAR: $${totalPagar.toFixed(2)}`, 190, finalY + 20, { align: "right" });
 
     doc.save(`${docData.number}_${client.nombre}.pdf`);
@@ -600,7 +535,6 @@ function setupInvoiceModal() {
         form.reset(); modal.style.display = "block";
         document.getElementById('inv-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('invoice-items-body').innerHTML = '';
-        
         const sel = document.getElementById('inv-patient');
         sel.innerHTML = '<option>Cargando...</option>';
         const res = await authFetch('/patients');
@@ -705,6 +639,30 @@ window.setupMainDrive = function() { const link = prompt("📂 Pega el enlace de
 window.changeMainDrive = function() { if(confirm("¿Cambiar carpeta principal?")) setupMainDrive(); }
 window.linkDriveFolder = async function(id, nombre) { const l = prompt(`📂 Pega el link de la carpeta de: ${nombre}`); if (l) { await authFetch(`/patients/${id}`, { method: 'PUT', body: JSON.stringify({ driveLink: l }) }); loadDrivePage(); } };
 window.unlinkDriveFolder = async function(id) { if(confirm("¿Desvincular carpeta?")) { await authFetch(`/patients/${id}`, { method: 'PUT', body: JSON.stringify({ driveLink: '' }) }); loadDrivePage(); } };
+
+// =========================================
+// NUEVAS FUNCIONES DE CONFIGURACIÓN (PARA PERFIL.HTML)
+// =========================================
+window.saveBusinessProfile = async function(profileData) {
+    const res = await authFetch('/user/me', {
+        method: 'PUT',
+        body: JSON.stringify({ businessProfile: profileData })
+    });
+    if (res && res.ok) {
+        alert("✅ Datos y Logo guardados en la NUBE. Disponibles en todos tus dispositivos.");
+    } else {
+        alert("❌ Error al guardar en la nube.");
+    }
+}
+
+window.loadBusinessProfile = async function() {
+    const res = await authFetch('/user/me');
+    if (res && res.ok) {
+        const user = await res.json();
+        return user.businessProfile || {};
+    }
+    return {};
+}
 
 // =========================================
 // ESTADÍSTICAS

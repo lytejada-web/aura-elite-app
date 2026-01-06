@@ -81,27 +81,35 @@
     <script src="assets/js/app.js"></script>
 
     <script>
-        // SCRIPT ESPECIAL PARA GESTIONAR LA IMAGEN
-        document.addEventListener('DOMContentLoaded', () => {
-            loadProfile();
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Cargar desde la NUBE (no localstorage)
+            const profile = await loadBusinessProfile(); 
+            if (profile) {
+                document.getElementById('biz-name').value = profile.name || '';
+                document.getElementById('biz-rif').value = profile.rif || '';
+                document.getElementById('biz-address').value = profile.address || '';
+                document.getElementById('biz-phone').value = profile.phone || '';
+                if (profile.logo) {
+                    currentLogoBase64 = profile.logo;
+                    const preview = document.getElementById('logo-preview');
+                    preview.src = profile.logo;
+                    document.getElementById('logo-preview-container').style.display = 'block';
+                }
+            }
         });
 
-        // Variable para guardar la imagen en formato texto (Base64)
         let currentLogoBase64 = "";
-
-        // Detectar cuando el usuario selecciona una imagen
         document.getElementById('biz-logo-file').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    currentLogoBase64 = e.target.result; // Guardamos la imagen convertida
-                    // Mostrar preview
+                    currentLogoBase64 = e.target.result; 
                     const preview = document.getElementById('logo-preview');
                     preview.src = currentLogoBase64;
                     document.getElementById('logo-preview-container').style.display = 'block';
                 };
-                reader.readAsDataURL(file); // Magia: Convierte archivo a texto
+                reader.readAsDataURL(file); 
             }
         });
 
@@ -111,30 +119,10 @@
                 rif: document.getElementById('biz-rif').value,
                 address: document.getElementById('biz-address').value,
                 phone: document.getElementById('biz-phone').value,
-                logo: currentLogoBase64 // Guardamos la imagen convertida
+                logo: currentLogoBase64
             };
-            
-            localStorage.setItem('aura_business_profile', JSON.stringify(profile));
-            alert("✅ Datos y Logo guardados correctamente.");
-        }
-
-        function loadProfile() {
-            const data = localStorage.getItem('aura_business_profile');
-            if (data) {
-                const p = JSON.parse(data);
-                document.getElementById('biz-name').value = p.name || '';
-                document.getElementById('biz-rif').value = p.rif || '';
-                document.getElementById('biz-address').value = p.address || '';
-                document.getElementById('biz-phone').value = p.phone || '';
-                
-                // Cargar Logo si existe
-                if (p.logo) {
-                    currentLogoBase64 = p.logo;
-                    const preview = document.getElementById('logo-preview');
-                    preview.src = p.logo;
-                    document.getElementById('logo-preview-container').style.display = 'block';
-                }
-            }
+            // Guardar en la NUBE
+            saveBusinessProfile(profile);
         }
     </script>
 </body>
